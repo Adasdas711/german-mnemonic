@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="color-scheme" content="dark light">
 <title>Морфемы</title>
+<script>
+/* apply theme before paint to avoid flash (BUG-28) */
+(function(){try{var t=localStorage.getItem("mrph_v2_theme");if(t)t=JSON.parse(t);document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark");document.querySelector('meta[name="color-scheme"]').content=t==="light"?"light dark":"dark light"}catch(e){document.documentElement.setAttribute("data-theme","dark")}})();
+</script>
 <style>
 :root{
  --bg:#101310; --panel:#161a16; --card:#1c211c; --card2:#232a23; --line:#2c352c; --line2:#42503f;
@@ -21,6 +25,7 @@
  --okbg:#e5f1e4; --okln:#a8cca3; --badbg:#eceeeb; --badln:#c2c9bf;
  --sh:0 6px 20px rgba(30,45,25,.09);
 }
+:root{--side-top:104px}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
@@ -74,8 +79,8 @@ button,input,textarea{font-family:inherit}
 
 /* ---------- LAYOUT ---------- */
 .shell{display:flex;max-width:1400px;margin:0 auto;align-items:flex-start}
-.side{width:262px;flex:0 0 262px;padding:18px 14px 40px;position:sticky;top:104px;transition:width .2s cubic-bezier(.2,.7,.3,1),flex-basis .2s,padding .2s,opacity .15s;
- max-height:calc(100dvh - 104px);overflow-y:auto;border-right:1px solid var(--line)}
+.side{width:262px;flex:0 0 262px;padding:18px 14px 40px;position:sticky;top:var(--side-top);transition:width .2s cubic-bezier(.2,.7,.3,1),flex-basis .2s,padding .2s,opacity .15s;
+ max-height:calc(100dvh - var(--side-top));overflow-y:auto;border-right:1px solid var(--line)}
 .slab{font-size:.7rem;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;margin:0 6px 9px;font-weight:600}
 .snav{list-style:none;display:flex;flex-direction:column;gap:4px;margin-bottom:20px}
 .sbtn{width:100%;text-align:left;padding:10px 11px;border-radius:10px;background:transparent;
@@ -130,6 +135,7 @@ button,input,textarea{font-family:inherit}
 .tagp.ask{background:transparent;border:1px solid var(--line2);color:var(--tx2);letter-spacing:.02em;text-transform:none;font-size:.72rem}
 .tagp.st{color:var(--tx3)}.tagp.st1{color:var(--ac2)}.tagp.st2{color:var(--ac)}
 .tagp{transition:background .25s,color .25s;display:inline-block}
+.tagp:empty{display:none}
 .tagp.bump-ok{animation:bump .36s cubic-bezier(.2,.7,.3,1);background:var(--okbg);color:var(--ok)}
 .tagp.bump-no{animation:nudge .34s ease;background:var(--badbg);color:var(--bad)}
 .tagp.grad{animation:bump .42s cubic-bezier(.2,.7,.3,1);background:var(--ac);color:#0b1a0c;font-weight:650}
@@ -251,14 +257,14 @@ body.slim .side{width:0;flex-basis:0;padding-left:0;padding-right:0;overflow:hid
 
 <header class="hdr">
  <div class="hdr-top">
-  <button class="ibtn" onclick="nav()" title="Панель">☰</button>
+  <button class="ibtn" onclick="nav()" title="Панель" aria-label="Открыть панель">☰</button>
   <div class="logo"><b>Морфемы</b><span id="hdSub"></span></div>
   <button class="htab" onclick="pop('secs',this)">Разделы ▾</button>
   <button class="htab only-wide" onclick="pop('mode',this)">Режим ▾</button>
   <button class="htab only-wide" onclick="pop('store',this)">Прогресс ▾</button>
   <button class="htab" id="tb-stats" onclick="view('stats')">Статистика</button>
   <div class="chip" id="chStreak">серия <b>0</b></div>
-  <button class="ibtn" onclick="theme()">◐</button>
+  <button class="ibtn" onclick="theme()" title="Сменить тему" aria-label="Сменить тему">◐</button>
  </div>
 </header>
 
@@ -371,7 +377,7 @@ body.slim .side{width:0;flex-basis:0;padding-left:0;padding-right:0;overflow:hid
    <div class="qmain" id="pQ"></div>
    <div class="qsub" id="pDir"></div>
   </div>
-  <input class="ansin" id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+  <input class="ansin" id="ans" aria-label="Ответ" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
    placeholder="Ответ своими словами" onkeydown="if(event.key==='Enter')send()">
   <div class="acts">
    <button class="btn pri" onclick="send()">Ответить</button>
@@ -386,7 +392,7 @@ body.slim .side{width:0;flex-basis:0;padding-left:0;padding-right:0;overflow:hid
 </div>
 
 <script>
-const SECTIONS = [{"id": "noun", "title": "Существительное", "desc": "Стихии рода, маркеры числа, функциональные глаголы, именные приставки и суффиксы.", "groups": [{"g": "Стихии — род", "items": [{"q": "der", "a": "раскалён докрасна, дымится, не притронуться", "acc": ["огон", "раскал", "гор", "красн"], "n": "Меняет поведение предмета, а не его цвет.", "e": "der Tisch, der Baum, der Kopf, der Weg", "w": 5}, {"q": "die", "a": "мокрый насквозь, с него течёт, он скользкий", "acc": ["вод", "мокр", "теч", "скольз"], "n": "Меняет поведение предмета, а не его цвет.", "e": "die Wand, die Hand, die Tür, die Stadt", "w": 5}, {"q": "das", "a": "каменный, тяжёлый, крошится по краям", "acc": ["камен", "камн", "тяжёл", "тяжел", "крош"], "n": "Меняет поведение предмета, а не его цвет.", "e": "das Buch, das Fenster, das Haus, das Kind", "w": 5}], "cols": ["Артикль", "Образ в сцене", "Примеры слов"], "about": "Обязательный третий слот существительного. Стихия должна менять поведение предмета, а не его цвет.", "bi": true, "ask": "Компонент образа", "askRev": "Артикль"}, {"g": "Маркеры числа", "items": [{"q": "-e", "a": "рядом встаёт второй такой же, оба стоят неподвижно", "acc": ["пар", "второй", "два", "рядом"], "n": "Жёсткие, форму держат — умлаута нет.", "e": "der Tisch → die Tische · das Jahr → die Jahre", "w": 5}, {"q": "-¨e", "a": "два раздутых предмета распирает, они выгибаются дугой", "acc": ["выгиба", "дуг", "распир", "разду"], "n": "", "e": "die Hand → die Hände · der Baum → die Bäume", "w": 5}, {"q": "-er", "a": "копии разлетаются во все стороны", "acc": ["разлёт", "разлет", "в стороны"], "n": "Жёсткие, форму держат — умлаута нет.", "e": "das Kind → die Kinder · das Bild → die Bilder", "w": 5}, {"q": "-¨er", "a": "раздутые копии лопаются в полёте", "acc": ["лопа", "полёт", "полет", "разду"], "n": "", "e": "das Buch → die Bücher · das Haus → die Häuser", "w": 5}, {"q": "-(e)n", "a": "копии валят потоком, конца не видно", "acc": ["ста", "поток", "валят"], "n": "Не две штуки и не горсть, а бесконечная лавина.", "e": "die Frau → die Frauen · die Zeitung → die Zeitungen", "w": 5}, {"q": "-nen", "a": "поток копий, каждая покрыта инеем", "acc": ["иней", "ста"], "n": "Иней — образ суффикса -in, от которого это множественное и образуется.", "e": "die Lehrerin → die Lehrerinnen", "w": 5}, {"q": "-s", "a": "копии шипят и растворяются в пену", "acc": ["шип", "пен", "раствор"], "n": "Заимствования: группа не выстраивается, а расползается.", "e": "das Auto → die Autos · das Hotel → die Hotels", "w": 5}, {"q": "-¨ чистый умлаут", "a": "предмет раздувается на месте, копий не прибавляется", "acc": ["разду", "наду", "на месте"], "n": "Штук столько же, но каждая распёрта изнутри.", "e": "der Vogel → die Vögel · der Apfel → die Äpfel", "w": 5}, {"q": "∅ (без изменения)", "a": "рядом зеркальный двойник, ничего не движется", "acc": ["двойник", "зеркал", "отражен"], "n": "", "e": "der Lehrer → die Lehrer · das Fenster → die Fenster", "w": 5}, {"q": "Dativ Pl.", "a": "вся группа обрастает хвостами", "acc": ["хвост"], "n": "Одно правило на весь язык: в дательном множественного добавляется -n.", "e": "", "w": 5}], "cols": ["Окончание", "Что происходит в сцене", "Примеры"], "about": "Ставится, только если множественное непредсказуемо по суффиксу.", "bi": true, "ask": "Компонент образа", "askRev": "Окончание"}, {"g": "Поведения функциональных глаголов", "items": [{"q": "treffen", "a": "бьёт в цель", "acc": ["цел", "бьёт", "бьет", "попада"], "n": "Принять решение, сделать выбор.", "e": "eine Entscheidung ~, eine Wahl ~, Maßnahmen ~", "w": 4}, {"q": "stellen", "a": "ставит вертикально", "acc": ["вертикал", "ставит"], "n": "Задать вопрос, подать заявление.", "e": "eine Frage ~, einen Antrag ~, eine Bedingung ~", "w": 4}, {"q": "halten", "a": "держит на весу", "acc": ["весу", "держ"], "n": "Сделать доклад, произнести речь.", "e": "einen Vortrag ~, eine Rede ~, ein Versprechen ~", "w": 4}, {"q": "machen", "a": "лепит руками", "acc": ["леп"], "n": "Внести предложение, допустить ошибку.", "e": "einen Vorschlag ~, einen Fehler ~, sich Sorgen ~", "w": 4}, {"q": "geben", "a": "протягивает", "acc": ["протяг"], "n": "Дать ответ, дать совет.", "e": "eine Antwort ~, einen Rat ~, eine Auskunft ~", "w": 4}, {"q": "nehmen", "a": "выхватывает", "acc": ["выхват"], "n": "Считаться с кем-л., проститься, сесть.", "e": "Rücksicht ~, Abschied ~, Platz ~", "w": 4}, {"q": "führen", "a": "ведёт за руку", "acc": ["вед"], "n": "Вести разговор, вести войну.", "e": "ein Gespräch ~, Krieg ~, eine Diskussion ~", "w": 4}, {"q": "ziehen", "a": "тянет", "acc": ["тян"], "n": "Сделать вывод, подвести итог.", "e": "einen Schluss ~, eine Bilanz ~, Konsequenzen ~", "w": 4}, {"q": "leisten", "a": "выкладывает", "acc": ["выклад"], "n": "Оказать помощь, оказать сопротивление.", "e": "Hilfe ~, Widerstand ~, einen Beitrag ~", "w": 4}, {"q": "fassen", "a": "сжимает в кулаке", "acc": ["кулак", "сжим"], "n": "Принять решение, набраться храбрости.", "e": "einen Entschluss ~, Mut ~, Vertrauen ~", "w": 4}, {"q": "erheben", "a": "поднимает над головой", "acc": ["голов", "поднима"], "n": "Предъявить претензию, заявить протест.", "e": "Anspruch ~, Einspruch ~", "w": 4}, {"q": "setzen", "a": "вбивает", "acc": ["вбива"], "n": "Установить границы, поставить цель.", "e": "Grenzen ~, ein Ziel ~, eine Frist ~", "w": 4}], "cols": ["Глагол", "Действие над ядром", "С какими существительными"], "about": "Для абстрактного существительного глагол — часть слова. По-русски решение «принимают», по-немецки в него «попадают».", "bi": true, "ask": "Поведение в сцене", "askRev": "Глагол"}, {"g": "Именные приставки", "items": [{"q": "un-", "a": "перечёркнутый круг", "acc": ["перечёркн", "перечеркн", "круг"], "n": "Отрицание.", "e": "das Unglück, die Unruhe, unmöglich", "w": 2}, {"q": "ur-", "a": "окаменелость", "acc": ["окамен"], "n": "Исконный, первичный.", "e": "der Ursprung, der Urwald, die Ursache", "w": 2}, {"q": "haupt-", "a": "корона", "acc": ["корон"], "n": "Главный.", "e": "die Hauptstadt, der Hauptbahnhof", "w": 2}, {"q": "grund-", "a": "фундамент", "acc": ["фундамент"], "n": "Основной, коренной.", "e": "das Grundgesetz, grundsätzlich", "w": 2}, {"q": "erz-", "a": "тройная нашивка", "acc": ["нашивк", "тройн"], "n": "Наивысшая степень.", "e": "der Erzfeind", "w": 2}, {"q": "riesen- / blitz-", "a": "великан / молния", "acc": ["великан", "молн"], "n": "Усиление.", "e": "der Riesenerfolg, blitzschnell", "w": 2}], "cols": ["Приставка", "Образ", "Примеры"], "about": "Меняют значение существительного или прилагательного, грамматики не несут.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Суффиксы: женский род", "items": [{"q": "-ung", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Zeitung, die Übung, die Genehmigung", "w": 4}, {"q": "-heit", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Freiheit, die Krankheit", "w": 4}, {"q": "-keit", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Möglichkeit, die Einsamkeit", "w": 4}, {"q": "-schaft", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Freundschaft, die Wissenschaft", "w": 4}, {"q": "-ei", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Bäckerei, die Polizei", "w": 4}, {"q": "-ion / -tion", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Nation, die Information", "w": 4}, {"q": "-ik", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Musik, die Technik, die Politik", "w": 4}, {"q": "-tät / -ität", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Universität, die Qualität", "w": 3}, {"q": "-ur", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Natur, die Kultur", "w": 3}, {"q": "-in", "a": "die, мн. -nen", "acc": ["die"], "n": "Удвоение n во множественном.", "e": "die Lehrerin, die Ärztin", "w": 4}, {"q": "-ie", "a": "die, мн. -n", "acc": ["die"], "n": "", "e": "die Chemie, die Energie, die Familie", "w": 2}, {"q": "-age / -ade", "a": "die, мн. -n", "acc": ["die"], "n": "", "e": "die Garage, die Marmelade", "w": 2}, {"q": "-anz / -enz", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Toleranz, die Konferenz", "w": 2}, {"q": "-ette / -esse", "a": "die, мн. -n", "acc": ["die"], "n": "Но das Interesse.", "e": "die Zigarette, die Delikatesse", "w": 2}, {"q": "-t отглагольный", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Fahrt, die Sicht, die Schrift, die Macht", "w": 4}, {"q": "-e неодушевлённое", "a": "die, мн. -n", "acc": ["die"], "n": "Исключения: der Name, der Käse, das Auge, das Ende, das Interesse, das Erbe.", "e": "die Lampe, die Blume, die Sprache", "w": 4}, {"q": "-e одушевлённое", "a": "der, слабое склонение", "acc": ["der"], "n": "Склоняются со слабым -n.", "e": "der Junge, der Kollege, der Löwe, der Franzose", "w": 4}], "cols": ["Суффикс", "Род и множественное", "Примеры"], "about": "Образа не имеют: род кодируется стихией. Надёжные соответствия, но не гарантии — артикль смотрится в словаре.", "bi": false, "ask": "Грамматика", "askRev": ""}, {"g": "Суффиксы: средний род", "items": [{"q": "-chen / -lein", "a": "das, мн. ∅", "acc": ["das"], "n": "", "e": "das Mädchen, das Brötchen, das Fräulein", "w": 5}, {"q": "-ment", "a": "das, мн. -e", "acc": ["das"], "n": "", "e": "das Instrument, das Dokument", "w": 3}, {"q": "-um", "a": "das, мн. -en / -a", "acc": ["das"], "n": "", "e": "das Zentrum → Zentren · das Praktikum → Praktika", "w": 3}, {"q": "-o", "a": "das, мн. -s", "acc": ["das"], "n": "Исключения: die Avocado, der Euro.", "e": "das Auto, das Kino, das Büro", "w": 3}, {"q": "Ge-…-e циркумфикс", "a": "das, мн. ∅", "acc": ["das"], "n": "", "e": "das Gebäude, das Gemälde, das Gemüse, das Gebirge", "w": 4}, {"q": "-tum", "a": "das, мн. -¨er", "acc": ["das"], "n": "Исключения: der Reichtum, der Irrtum.", "e": "das Eigentum", "w": 2}, {"q": "-icht", "a": "das, мн. -e", "acc": ["das"], "n": "", "e": "das Dickicht", "w": 1}], "cols": ["Суффикс", "Род и множественное", "Примеры"], "about": "То же: справочное знание, а не образ.", "bi": false, "ask": "Грамматика", "askRev": ""}, {"g": "Суффиксы: мужской род", "items": [{"q": "-er отглагольный", "a": "der, мн. ∅", "acc": ["der"], "n": "От глагола: lehren → der Lehrer.", "e": "der Lehrer, der Fahrer", "w": 5}, {"q": "-er от существительного", "a": "der, мн. ∅", "acc": ["der"], "n": "От топонима или существительного.", "e": "der Berliner, der Ausländer", "w": 4}, {"q": "-ler / -ner", "a": "der, мн. ∅", "acc": ["der"], "n": "", "e": "der Sportler, der Rentner, der Gärtner", "w": 3}, {"q": "-ling", "a": "der, мн. -e", "acc": ["der"], "n": "", "e": "der Frühling, der Lehrling", "w": 2}, {"q": "-ismus", "a": "der, мн. -men", "acc": ["der"], "n": "", "e": "der Kapitalismus", "w": 2}, {"q": "-ant / -ent", "a": "der, мн. -en, слабое склонение", "acc": ["der"], "n": "", "e": "der Praktikant, der Student", "w": 3}, {"q": "-ist", "a": "der, мн. -en, слабое склонение", "acc": ["der"], "n": "", "e": "der Journalist", "w": 3}, {"q": "-oge", "a": "der, мн. -n, слабое склонение", "acc": ["der"], "n": "", "e": "der Biologe", "w": 1}, {"q": "-graph / -soph", "a": "der, мн. -en, слабое склонение", "acc": ["der"], "n": "", "e": "der Fotograf, der Philosoph", "w": 1}, {"q": "-eur", "a": "der, мн. -e", "acc": ["der"], "n": "", "e": "der Ingenieur, der Friseur", "w": 2}, {"q": "-or", "a": "der, мн. -en", "acc": ["der"], "n": "", "e": "der Motor, der Doktor", "w": 3}, {"q": "-us", "a": "der", "acc": ["der"], "n": "Латинские абстрактные → -en. Бытовые: Bus → Busse.", "e": "der Rhythmus → Rhythmen", "w": 2}, {"q": "-ich / -ig", "a": "der, мн. -e", "acc": ["der"], "n": "", "e": "der Teppich, der Honig, der König", "w": 2}, {"q": "-nis", "a": "чаще das, но треть die", "acc": ["das", "die"], "n": "die: Kenntnis, Erkenntnis, Erlaubnis, Wildnis, Finsternis.", "e": "das Ergebnis, das Geheimnis, das Verständnis", "w": 3}, {"q": "Ge- голый префикс", "a": "чаще das, но есть der и die", "acc": ["das"], "n": "der: Gedanke, Geruch, Geschmack, Gewinn. die: Gefahr, Geduld, Gewalt, Geschichte.", "e": "das Gespräch, das Getränk", "w": 4}], "cols": ["Суффикс", "Род и множественное", "Примеры"], "about": "Тест на «-er»: есть глагол-источник → der; есть существительное или топоним → der; нет ни того ни другого → правило не применяется.", "bi": false, "ask": "Грамматика", "askRev": ""}]}, {"id": "verb", "title": "Глагол", "desc": "Опоры, крепежи управления, возвратность, чередование основы, комнаты претерита, глагольные приставки и суффиксы.", "groups": [{"g": "Опоры — вспомогательный глагол", "items": [{"q": "haben", "a": "предмет зажат у вас в руках, вы его не отпускаете", "acc": ["рук", "держ", "зажат"], "n": "Большинство глаголов. Переходные всегда haben.", "e": "hat gearbeitet, hat gelesen, hat gewartet", "w": 5}, {"q": "sein", "a": "предмет вырывается и улетает сам", "acc": ["вырыва", "улета", "лет", "сам"], "n": "Картинка совпадает с движением, но это подсказка: bleiben берёт sein без движения.", "e": "ist gefahren, ist gekommen, ist geblieben", "w": 5}], "cols": ["Вспомогательный", "Образ в сцене", "Примеры"], "about": "Третий слот глагола. Картинка sein совпадает с движением, но это подсказка: bleiben берёт sein без движения.", "bi": true, "ask": "Компонент образа", "askRev": "Вспомогательный глагол"}, {"g": "Крепежи — управление", "items": [{"q": "auf", "a": "крыша", "acc": ["крыш"], "n": "Akkusativ — крепёж обрушивается.", "e": "warten auf, sich freuen auf, achten auf, hoffen auf", "w": 5}, {"q": "an", "a": "гвоздь", "acc": ["гвозд"], "n": "Akk и Dat: denken an (Akk), teilnehmen an (Dat).", "e": "denken an, sich erinnern an, leiden an", "w": 5}, {"q": "für", "a": "зонт защищающий", "acc": ["зонт"], "n": "Akkusativ.", "e": "sich interessieren für, danken für, sorgen für", "w": 5}, {"q": "über", "a": "мост", "acc": ["мост"], "n": "Akkusativ.", "e": "sprechen über, nachdenken über, sich ärgern über", "w": 5}, {"q": "mit", "a": "цепь", "acc": ["цеп"], "n": "Dativ.", "e": "rechnen mit, anfangen mit, sich beschäftigen mit", "w": 5}, {"q": "nach", "a": "стрелка вслед", "acc": ["стрелк"], "n": "Dativ.", "e": "fragen nach, suchen nach, riechen nach", "w": 5}, {"q": "von", "a": "магнит отрывающий", "acc": ["магнит"], "n": "Dativ.", "e": "träumen von, abhängen von, erzählen von", "w": 5}, {"q": "zu", "a": "замо́к", "acc": ["замок", "замо"], "n": "Dativ.", "e": "gehören zu, führen zu, gratulieren zu", "w": 5}, {"q": "in", "a": "коробка", "acc": ["коробк"], "n": "Akk и Dat: sich verlieben in (Akk), bestehen in (Dat).", "e": "sich verlieben in, einwilligen in", "w": 5}, {"q": "um", "a": "верёвка вокруг", "acc": ["верёвк", "веревк"], "n": "Akkusativ.", "e": "bitten um, sich kümmern um, kämpfen um", "w": 5}, {"q": "Akkusativ", "a": "крепёж бьёт, врезается, обрушивается", "acc": ["бьёт", "бьет", "обруш", "врез", "удар"], "n": "", "e": "", "w": 5}, {"q": "Dativ", "a": "крепёж лежит неподвижно", "acc": ["лежит", "неподвиж"], "n": "", "e": "", "w": 5}, {"q": "голый датив (без предлога)", "a": "объект лежит на подушке, к нему не прикасаются", "acc": ["подушк"], "n": "helfen, danken, folgen, gefallen, gehören, passen, begegnen, gratulieren, vertrauen, antworten, glauben, dienen, schaden, fehlen", "e": "", "w": 5}], "cols": ["Предлог или падеж", "Крепёж в сцене", "Примеры"], "about": "Предлог задаётся предметом, падеж — его движением: Akkusativ бьёт, Dativ лежит.", "bi": true, "ask": "Компонент образа", "askRev": "Предлог или падеж"}, {"g": "Возвратность", "items": [{"q": "sich", "a": "зеркало, действие возвращается к вам", "acc": ["зеркал"], "n": "Разбитое зеркало занято приставкой zer-.", "e": "", "w": 5}, {"q": "sich + Akkusativ", "a": "зеркало прямо перед вами", "acc": ["перед", "прямо"], "n": "sich waschen, sich freuen, sich setzen", "e": "sich waschen, sich freuen, sich setzen", "w": 5}, {"q": "sich + Dativ", "a": "зеркало сбоку, вы смотрите не прямо в него", "acc": ["сбок"], "n": "sich die Hände waschen, sich etwas merken", "e": "sich die Hände waschen, sich etwas merken", "w": 5}], "cols": ["Форма", "Образ", "Примеры"], "about": "Немецкие возвратные глаголы часто не совпадают с русскими: sich erinnern — вспоминать, без «-ся».", "bi": true, "ask": "Компонент образа", "askRev": "Форма"}, {"g": "Чередование основы", "items": [{"q": "a → ä", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "fahren → fährt, tragen, schlafen", "e": "fahren → fährt, tragen, schlafen", "w": 5}, {"q": "o → ö", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "stoßen → stößt", "e": "stoßen → stößt", "w": 5}, {"q": "au → äu", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "laufen → läuft", "e": "laufen → läuft", "w": 5}, {"q": "e → i / ie", "a": "предмет усыхает и стягивается (i) или вытягивается в длину (ie)", "acc": ["усыха", "стягив", "вытягив", "сжим"], "n": "Краткое e даёт стягивание, долгое — вытягивание. Исключения: geben, nehmen, treten.", "e": "helfen → hilft · sehen → sieht", "w": 5}], "cols": ["Чередование", "Маркер в сцене", "Примеры"], "about": "Во 2-м и 3-м лице единственного числа настоящего времени.", "bi": true, "ask": "Компонент образа", "askRev": "Чередование"}, {"g": "Комнаты претерита", "items": [{"q": "ei – ie/i", "a": "библиотека, два угла", "acc": ["библиотек"], "n": "Звонкий согласный → ie–ie, глухой → i–i. Исключения: leiden, schneiden.", "e": "bleiben, schreiben, steigen · greifen, reiten, beißen", "w": 3}, {"q": "ie – o – o", "a": "мастерская", "acc": ["мастерск"], "n": "", "e": "fliegen, ziehen, bieten, schließen, verlieren", "w": 3}, {"q": "i – a – u", "a": "подвал", "acc": ["подвал"], "n": "", "e": "trinken, finden, singen, springen", "w": 3}, {"q": "i – a – o", "a": "котельная", "acc": ["котельн"], "n": "", "e": "beginnen, gewinnen, schwimmen", "w": 3}, {"q": "e – a – o", "a": "кухня", "acc": ["кухн"], "n": "", "e": "nehmen, sprechen, helfen, sterben, werfen", "w": 3}, {"q": "e – a – e", "a": "столовая", "acc": ["столов"], "n": "", "e": "geben, sehen, essen, lesen, treten", "w": 3}, {"q": "i / ie – a – e", "a": "кабинет", "acc": ["кабинет"], "n": "", "e": "sitzen, bitten, liegen", "w": 3}, {"q": "e / ü – o – o", "a": "ванная", "acc": ["ванн"], "n": "", "e": "heben, lügen, betrügen, schwören", "w": 3}, {"q": "a – u – a", "a": "гараж", "acc": ["гараж"], "n": "", "e": "fahren, tragen, laden, schlagen", "w": 3}, {"q": "претерит ie/i, гласная возвращается", "a": "сад, два угла", "acc": ["сад"], "n": "Долгий ie: fallen, halten, lassen. Краткий i: fangen, hängen.", "e": "fallen, halten, laufen, rufen, heißen", "w": 3}, {"q": "o – a – o", "a": "прихожая", "acc": ["прихож"], "n": "", "e": "kommen", "w": 3}, {"q": "нерегулярные", "a": "кладовка", "acc": ["кладовк"], "n": "", "e": "gehen, stehen, tun, sein, werden, bringen, denken, wissen", "w": 5}, {"q": "слабая парадигма омографа", "a": "коридор", "acc": ["коридор"], "n": "hängen/hängte, erschrecken/erschreckte, schaffen/schaffte, bewegen/bewegte, wiegen/wiegte, senden/sendete", "e": "", "w": 2}], "cols": ["Схема", "Комната", "Глаголы"], "about": "Комната восстанавливает класс и сокращает число независимых единиц. Форму она не выдаёт — форма проверяется.", "bi": false, "ask": "Локация", "askRev": ""}, {"g": "Приставки: неотделяемые", "items": [{"q": "be-", "a": "бетон заливает поверхность", "acc": ["бетон"], "n": "Охват объекта, переходность. Не берёт ge- в перфекте.", "e": "antworten → beantworten · suchen → besuchen", "w": 5}, {"q": "ge-", "a": "серая гиря", "acc": ["гир"], "n": "Результат, совместность. Синхронно непродуктивна.", "e": "hören → gehören · fallen → gefallen", "w": 3}, {"q": "er-", "a": "эрудит добивается своего", "acc": ["эрудит"], "n": "Достижение результата, начало.", "e": "finden → erfinden · kennen → erkennen", "w": 5}, {"q": "ver-", "a": "вертолёт улетает не туда", "acc": ["вертол"], "n": "«Не туда», порча, израсходование, завершение.", "e": "sich verlaufen · verkaufen · versprechen", "w": 5}, {"q": "zer-", "a": "зеркало вдребезги", "acc": ["зеркал", "вдребезг"], "n": "Разрушение на части.", "e": "brechen → zerbrechen · stören → zerstören", "w": 4}, {"q": "ent-", "a": "энтомолог отрывает крыло", "acc": ["энтомолог"], "n": "Отделение, удаление, начало.", "e": "decken → entdecken · lassen → entlassen", "w": 4}, {"q": "emp-", "a": "тот же энтомолог, но шёпотом", "acc": ["шёпот", "шепот", "энтомолог"], "n": "Вариант ent-, три глагола.", "e": "empfehlen, empfangen, empfinden", "w": 2}, {"q": "miss-", "a": "стрела мимо", "acc": ["стрел", "мимо"], "n": "Неудача, ошибка.", "e": "missverstehen, misslingen, misstrauen", "w": 3}], "cols": ["Приставка", "Образ, приварен к корню", "Примеры"], "about": "Всегда безударные, не берут ge- в перфекте.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Приставки: отделяемые", "items": [{"q": "ab-", "a": "абордажный крюк отрывает", "acc": ["абордаж", "крюк"], "n": "Прочь, вниз, завершение.", "e": "abfahren, abnehmen, abschließen", "w": 5}, {"q": "an-", "a": "антенна касается", "acc": ["антенн"], "n": "Касание, начало, частичность.", "e": "anrufen, anfangen, anziehen", "w": 5}, {"q": "auf-", "a": "лифт взмывает", "acc": ["лифт"], "n": "Вверх, открытие, внезапность.", "e": "aufstehen, aufmachen, aufhören, aufpassen", "w": 5}, {"q": "aus-", "a": "дверь наружу", "acc": ["двер", "наруж"], "n": "Наружу, до конца, исчерпание.", "e": "ausgehen, aussehen, ausmachen", "w": 5}, {"q": "bei-", "a": "приставная лестница", "acc": ["лестниц"], "n": "Рядом, добавление.", "e": "beitragen, beibringen", "w": 2}, {"q": "ein-", "a": "воронка втягивает", "acc": ["воронк"], "n": "Внутрь.", "e": "einsteigen, einladen, einkaufen", "w": 5}, {"q": "fort- / weg-", "a": "указатель прочь", "acc": ["указател"], "n": "Прочь, продолжение.", "e": "fortsetzen, weggehen", "w": 3}, {"q": "her-", "a": "рука тянет к себе", "acc": ["тянет к себе", "к себе"], "n": "К говорящему.", "e": "herkommen, herstellen", "w": 3}, {"q": "hin-", "a": "рука отталкивает", "acc": ["отталкива"], "n": "От говорящего.", "e": "hingehen, hinfallen, hinweisen", "w": 3}, {"q": "los-", "a": "сорванная цепь", "acc": ["сорван", "цеп"], "n": "Отделение, внезапное начало.", "e": "losfahren, loslassen", "w": 3}, {"q": "mit-", "a": "митинг, толпа", "acc": ["митинг", "толп"], "n": "Вместе, участие.", "e": "mitkommen, mitbringen, mitteilen", "w": 4}, {"q": "nach-", "a": "ночной преследователь", "acc": ["ночн", "преслед"], "n": "Вслед, после, повторно.", "e": "nachdenken, nachfragen, nachholen", "w": 4}, {"q": "vor-", "a": "вор бежит впереди", "acc": ["вор"], "n": "Перед, заранее, вперёд.", "e": "vorstellen, vorbereiten, vorschlagen", "w": 5}, {"q": "zu-", "a": "зубы смыкаются", "acc": ["зуб"], "n": "Закрытие, направление к.", "e": "zumachen, zuhören, zunehmen", "w": 5}, {"q": "zurück-", "a": "пятящийся рак", "acc": ["рак", "пятящ"], "n": "Назад.", "e": "zurückkommen, zurückgeben", "w": 4}, {"q": "zusammen-", "a": "сжатый кулак", "acc": ["кулак"], "n": "Воедино.", "e": "zusammenarbeiten, zusammenfassen", "w": 3}, {"q": "weiter-", "a": "бегущая дорожка", "acc": ["дорожк", "бегущ"], "n": "Дальше, продолжение.", "e": "weitermachen, weitergehen", "w": 3}, {"q": "teil-", "a": "разрезанный пирог", "acc": ["пирог"], "n": "Участие.", "e": "teilnehmen", "w": 2}, {"q": "fest-", "a": "вбитый костыль", "acc": ["костыл"], "n": "Прочно, фиксация.", "e": "festhalten, feststellen", "w": 2}, {"q": "statt-", "a": "пустая сцена", "acc": ["сцен"], "n": "Состояться.", "e": "stattfinden", "w": 2}], "cols": ["Приставка", "Образ, отлетает от корня", "Примеры"], "about": "Всегда ударные, ge- встаёт между приставкой и корнем.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Приставки: переменные", "items": [{"q": "über-", "a": "великан перешагивает", "acc": ["великан"], "n": "Ударная — отделяемая: ˈübersetzen перевезти. Безударная: überˈsetzen переводить.", "e": "", "w": 4}, {"q": "unter-", "a": "подвал", "acc": ["подвал"], "n": "ˈunterbringen разместить · unterˈbrechen прервать.", "e": "", "w": 4}, {"q": "um-", "a": "зонт крутится", "acc": ["зонт"], "n": "ˈumfahren сбить · umˈfahren объехать.", "e": "", "w": 4}, {"q": "durch-", "a": "дуршлаг", "acc": ["дуршлаг"], "n": "ˈdurchfallen провалиться · durchˈschauen раскусить.", "e": "", "w": 4}, {"q": "wider-", "a": "щит", "acc": ["щит"], "n": "ˈwiderspiegeln отражать · widerˈsprechen противоречить.", "e": "", "w": 2}, {"q": "wieder-", "a": "бумеранг", "acc": ["бумеранг"], "n": "ˈwiederkommen · wiederˈholen повторять.", "e": "", "w": 3}, {"q": "hinter-", "a": "спина", "acc": ["спин"], "n": "hinterˈlassen оставить.", "e": "", "w": 2}, {"q": "ударение на приставке", "a": "приставка отлетает от корня", "acc": ["отлета", "отрыва", "отделя"], "n": "Отделяемая.", "e": "", "w": 5}, {"q": "ударение на корне", "a": "приставка приварена к корню намертво", "acc": ["приварен", "намертво", "сросл"], "n": "Неотделяемая.", "e": "", "w": 5}], "cols": ["Приставка", "Образ", "Ударная и безударная формы"], "about": "Отделяемость определяется ударением, а не смыслом. Ударение видно в транскрипции.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Суффиксы глаголов", "items": [{"q": "-ieren", "a": "не берёт ge- в перфекте", "acc": ["ge-", "не берёт ge", "без ge"], "n": "", "e": "studieren → hat studiert · funktionieren", "w": 4}, {"q": "-isieren", "a": "приведение в состояние", "acc": ["привед", "состоян"], "n": "", "e": "realisieren, modernisieren", "w": 2}, {"q": "-igen", "a": "делать таким", "acc": ["делать так"], "n": "", "e": "beruhigen, reinigen, entschuldigen, genehmigen", "w": 3}, {"q": "-eln / -ern", "a": "ослабленное, повторяющееся действие", "acc": ["ослаблен", "повторя"], "n": "", "e": "lächeln, klingeln, wandern", "w": 2}], "cols": ["Суффикс", "Особенность", "Примеры"], "about": "Влияют на форму, а не на род.", "bi": false, "ask": "Грамматика", "askRev": ""}]}, {"id": "adj", "title": "Прилагательное", "desc": "Степени сравнения, крепежи управления, адъективные суффиксы.", "groups": [{"g": "Степени сравнения", "items": [{"q": "регулярная степень", "a": "ничего не меняется", "acc": ["ничего", "нет"], "n": "", "e": "schnell → schneller → am schnellsten", "w": 5}, {"q": "умлаут в сравнении", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "alt, jung, lang, kurz, warm, kalt, stark, scharf, hart, klug, dumm, arm, schwach, grob, gesund, krank", "e": "alt → älter · jung → jünger", "w": 5}, {"q": "неправильная степень", "a": "предмет подменяется другим", "acc": ["подмен", "друг"], "n": "gut → besser · viel → mehr · gern → lieber", "e": "gut → besser · viel → mehr · gern → lieber · hoch → höher · nah → näher", "w": 5}], "cols": ["Тип", "Маркер в сцене", "Примеры"], "about": "Единственное дополнение, специфичное для прилагательного.", "bi": false, "ask": "Компонент образа", "askRev": ""}, {"g": "Крепежи прилагательных", "items": [{"q": "stolz auf (+ Akk)", "a": "крыша, обрушивается", "acc": ["крыш"], "n": "", "e": "stolz auf seinen Sohn", "w": 3}, {"q": "böse auf (+ Akk)", "a": "крыша, обрушивается", "acc": ["крыш"], "n": "", "e": "böse auf den Nachbarn", "w": 3}, {"q": "zufrieden mit (+ Dat)", "a": "цепь, лежит неподвижно", "acc": ["цеп"], "n": "", "e": "zufrieden mit dem Ergebnis", "w": 3}, {"q": "interessiert an (+ Dat)", "a": "гвоздь, лежит неподвижно", "acc": ["гвозд"], "n": "", "e": "interessiert an Musik", "w": 3}, {"q": "bereit zu (+ Dat)", "a": "замо́к", "acc": ["замок", "замо"], "n": "", "e": "bereit zum Aufbruch", "w": 3}, {"q": "fähig zu (+ Dat)", "a": "замо́к", "acc": ["замок", "замо"], "n": "", "e": "fähig zu allem", "w": 3}, {"q": "reich / arm an (+ Dat)", "a": "гвоздь", "acc": ["гвозд"], "n": "", "e": "reich an Vitaminen", "w": 3}, {"q": "abhängig von (+ Dat)", "a": "магнит", "acc": ["магнит"], "n": "", "e": "abhängig von der Meinung", "w": 3}, {"q": "verantwortlich für (+ Akk)", "a": "зонт", "acc": ["зонт"], "n": "", "e": "verantwortlich für das Projekt", "w": 3}, {"q": "überzeugt von (+ Dat)", "a": "магнит", "acc": ["магнит"], "n": "", "e": "überzeugt von der Idee", "w": 3}], "cols": ["Прилагательное с предлогом", "Крепёж", "Пример"], "about": "Прилагательные берут те же крепежи, что и глаголы — новых образов не требуется.", "bi": false, "ask": "Компонент образа", "askRev": ""}, {"g": "Суффиксы прилагательных", "items": [{"q": "-ig", "a": "обладающий признаком", "acc": ["обладающ", "признак"], "n": "", "e": "fleißig, richtig, wichtig", "w": 4}, {"q": "-lich", "a": "свойственный, слегка", "acc": ["свойствен", "слегка"], "n": "", "e": "freundlich, möglich, rötlich", "w": 4}, {"q": "-isch", "a": "относящийся", "acc": ["относящ"], "n": "", "e": "praktisch, kindisch, russisch", "w": 4}, {"q": "-bar", "a": "возможность", "acc": ["возможн"], "n": "", "e": "essbar, sichtbar, machbar", "w": 4}, {"q": "-sam", "a": "склонность", "acc": ["склонност"], "n": "", "e": "langsam, sparsam, aufmerksam", "w": 3}, {"q": "-haft", "a": "подобие", "acc": ["подоби"], "n": "", "e": "fehlerhaft, dauerhaft", "w": 2}, {"q": "-los / -frei", "a": "отсутствие", "acc": ["отсутств"], "n": "", "e": "arbeitslos, bleifrei", "w": 4}, {"q": "-voll / -reich", "a": "изобилие", "acc": ["изобили"], "n": "", "e": "wertvoll, erfolgreich", "w": 3}, {"q": "-arm", "a": "бедный чем-либо", "acc": ["бедн"], "n": "", "e": "fettarm", "w": 1}, {"q": "-mäßig / -gemäß", "a": "соответствующий", "acc": ["соответств"], "n": "", "e": "regelmäßig, zeitgemäß", "w": 2}, {"q": "-fähig", "a": "способный", "acc": ["способн"], "n": "", "e": "leistungsfähig", "w": 2}, {"q": "-wert / -würdig", "a": "достойный", "acc": ["достойн"], "n": "", "e": "sehenswert, glaubwürdig", "w": 2}, {"q": "-artig / -förmig", "a": "подобный, по форме", "acc": ["подобн", "форм"], "n": "", "e": "großartig, kreisförmig", "w": 2}, {"q": "-fach", "a": "кратность", "acc": ["кратн"], "n": "", "e": "mehrfach, zweifach", "w": 2}], "cols": ["Суффикс", "Значение", "Примеры"], "about": "Справочное знание: грамматики не несут, образа не требуют.", "bi": false, "ask": "Грамматика", "askRev": ""}]}, {"id": "root", "title": "Корни", "desc": "Корневой реестр: один образ обслуживает всё словообразовательное гнездо.", "groups": [{"g": "Речь и мысль", "items": [{"q": "sag-", "a": "сага, которую рассказывают", "acc": ["сага"], "n": "", "e": "sagen, die Aussage, absagen, zusagen", "w": 5}, {"q": "sprech- / sprach-", "a": "спираль изо рта", "acc": ["спирал"], "n": "", "e": "sprechen, die Sprache, das Gespräch, versprechen", "w": 5}, {"q": "red-", "a": "редька во рту", "acc": ["редьк"], "n": "", "e": "reden, die Rede, verabreden, die Verabredung", "w": 4}, {"q": "ruf-", "a": "рупор", "acc": ["рупор"], "n": "", "e": "rufen, der Ruf, anrufen, der Beruf", "w": 5}, {"q": "frag-", "a": "фрак швейцара", "acc": ["фрак"], "n": "", "e": "fragen, die Frage, nachfragen, befragen", "w": 5}, {"q": "antwort-", "a": "ответный удар", "acc": ["ответн", "удар"], "n": "", "e": "antworten, die Antwort, die Verantwortung", "w": 4}, {"q": "denk-", "a": "купюра на лбу", "acc": ["купюр"], "n": "", "e": "denken, der Gedanke, nachdenken, das Denkmal", "w": 5}, {"q": "wiss-", "a": "висок, который трут", "acc": ["висок"], "n": "", "e": "wissen, die Wissenschaft, gewiss", "w": 3}, {"q": "kenn-", "a": "кегля, которую узнают", "acc": ["кегл"], "n": "", "e": "kennen, die Kenntnis, erkennen, bekannt", "w": 4}, {"q": "lern- / lehr-", "a": "гидра у школьной доски", "acc": ["гидр"], "n": "", "e": "lernen, lehren, der Lehrer, der Lehrling", "w": 4}, {"q": "glaub-", "a": "глубина, в которую верят", "acc": ["глубин"], "n": "", "e": "glauben, der Glaube, unglaublich", "w": 3}, {"q": "mein-", "a": "мина, которую полагают", "acc": ["мин"], "n": "", "e": "meinen, die Meinung, gemeinsam", "w": 3}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Движение", "items": [{"q": "geh-", "a": "гейзер выбрасывает", "acc": ["гейзер"], "n": "", "e": "gehen, der Gang, vergehen, der Ausgang", "w": 5}, {"q": "komm-", "a": "комок прикатился", "acc": ["комок"], "n": "", "e": "kommen, die Ankunft, die Zukunft, bekommen", "w": 5}, {"q": "fahr-", "a": "фара в темноте", "acc": ["фар"], "n": "", "e": "fahren, die Fahrt, die Erfahrung, die Fahrkarte", "w": 5}, {"q": "flieg-", "a": "флигель взлетает", "acc": ["флигел"], "n": "", "e": "fliegen, der Flug, das Flugzeug", "w": 3}, {"q": "lauf-", "a": "лафет катится", "acc": ["лафет"], "n": "", "e": "laufen, der Lauf, verlaufen, die Laufbahn", "w": 5}, {"q": "zieh-", "a": "цепь, которую тянут", "acc": ["цеп"], "n": "", "e": "ziehen, der Zug, erziehen, umziehen, anziehen", "w": 5}, {"q": "trag-", "a": "трактор тащит", "acc": ["трактор"], "n": "", "e": "tragen, der Vertrag, ertragen, der Antrag", "w": 5}, {"q": "bring-", "a": "брынза в руках", "acc": ["брынз"], "n": "", "e": "bringen, verbringen, mitbringen, beibringen", "w": 5}, {"q": "steig-", "a": "стейк на вертеле поднимается", "acc": ["стейк"], "n": "", "e": "steigen, einsteigen, umsteigen, die Steigung", "w": 3}, {"q": "führ-", "a": "фюрер ведёт колонну", "acc": ["фюрер"], "n": "", "e": "führen, die Führung, einführen, ausführen", "w": 4}, {"q": "folg-", "a": "фольга тянется следом", "acc": ["фольг"], "n": "", "e": "folgen, die Folge, der Erfolg, verfolgen", "w": 4}, {"q": "fall-", "a": "фал, обрывающийся канат", "acc": ["фал"], "n": "", "e": "fallen, der Fall, gefallen, der Zufall, der Unfall", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Положение и состояние", "items": [{"q": "steh-", "a": "штанга стоит вертикально", "acc": ["штанг"], "n": "", "e": "stehen, verstehen, bestehen, entstehen, der Zustand", "w": 5}, {"q": "stell-", "a": "стела водружается", "acc": ["стел"], "n": "", "e": "stellen, die Stelle, vorstellen, herstellen, feststellen", "w": 5}, {"q": "setz-", "a": "сеть набрасывается", "acc": ["сет"], "n": "", "e": "setzen, der Satz, ersetzen, übersetzen, besetzen", "w": 5}, {"q": "leg-", "a": "лего укладывается", "acc": ["лего"], "n": "", "e": "legen, die Lage, überlegen, anlegen", "w": 4}, {"q": "halt-", "a": "халат, за который держат", "acc": ["халат"], "n": "", "e": "halten, behalten, erhalten, der Inhalt, der Aufenthalt", "w": 5}, {"q": "bleib-", "a": "блин прилип", "acc": ["блин"], "n": "", "e": "bleiben", "w": 3}, {"q": "lass-", "a": "лассо, которое отпускают", "acc": ["лассо"], "n": "", "e": "lassen, verlassen, zuverlässig, entlassen, zulassen", "w": 5}, {"q": "wohn-", "a": "вонючий подъезд", "acc": ["вонюч"], "n": "", "e": "wohnen, die Wohnung, der Einwohner, die Gewohnheit", "w": 4}, {"q": "leb-", "a": "лебедь живая", "acc": ["лебед"], "n": "", "e": "leben, das Leben, erleben, das Erlebnis", "w": 5}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Восприятие", "items": [{"q": "seh-", "a": "зев распахнутый", "acc": ["зев"], "n": "", "e": "sehen, die Sicht, die Absicht, die Aussicht", "w": 5}, {"q": "schau-", "a": "шов, который разглядывают", "acc": ["шов"], "n": "", "e": "schauen, anschauen, die Anschauung", "w": 3}, {"q": "hör-", "a": "хорь насторожился", "acc": ["хор"], "n": "", "e": "hören, aufhören, gehören, zuhören", "w": 5}, {"q": "fühl-", "a": "шаман щупает", "acc": ["шаман"], "n": "", "e": "fühlen, das Gefühl, mitfühlen", "w": 3}, {"q": "fass-", "a": "фас! — хватай", "acc": ["фас"], "n": "", "e": "fassen, verfassen, zusammenfassen", "w": 3}, {"q": "greif-", "a": "гриф вцепился", "acc": ["гриф"], "n": "", "e": "greifen, der Begriff, angreifen", "w": 3}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Действие и труд", "items": [{"q": "mach-", "a": "махина работает", "acc": ["махин"], "n": "", "e": "machen, aufmachen, mitmachen, ausmachen", "w": 5}, {"q": "tu-", "a": "туфля топает", "acc": ["туфл"], "n": "", "e": "tun, die Tat, tätig, die Tätigkeit", "w": 5}, {"q": "arbeit-", "a": "арбуз, который таскают", "acc": ["арбуз"], "n": "", "e": "arbeiten, die Arbeit, bearbeiten, verarbeiten", "w": 5}, {"q": "schaff-", "a": "шкаф сколачивают", "acc": ["шкаф"], "n": "", "e": "schaffen, beschaffen, erschaffen", "w": 3}, {"q": "wirk-", "a": "вихрь действует", "acc": ["вихр"], "n": "", "e": "wirken, die Wirkung, wirklich, verwirklichen", "w": 3}, {"q": "bau-", "a": "баул кладут в стену", "acc": ["баул"], "n": "", "e": "bauen, der Bau, das Gebäude, der Bauer, aufbauen", "w": 4}, {"q": "brauch-", "a": "брошь, которая нужна", "acc": ["брош"], "n": "", "e": "brauchen, der Gebrauch, verbrauchen", "w": 3}, {"q": "nutz-", "a": "нож, полезный инструмент", "acc": ["нож"], "n": "", "e": "nutzen, benutzen, nützlich, ausnutzen", "w": 3}, {"q": "dien-", "a": "дыня на подносе", "acc": ["дын"], "n": "", "e": "dienen, der Dienst, verdienen, bedienen", "w": 3}, {"q": "helf-", "a": "эльф помогает", "acc": ["эльф"], "n": "", "e": "helfen, die Hilfe, behilflich", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Обмен и обладание", "items": [{"q": "geb-", "a": "гэбист отбирает и отдаёт", "acc": ["гэбист", "гэбн"], "n": "", "e": "geben, die Aufgabe, ergeben, die Ausgabe, angeben", "w": 5}, {"q": "nehm-", "a": "немой выхватывает", "acc": ["немой"], "n": "", "e": "nehmen, die Aufnahme, abnehmen, zunehmen, teilnehmen", "w": 5}, {"q": "kauf-", "a": "кофе покупают", "acc": ["кофе"], "n": "", "e": "kaufen, verkaufen, einkaufen, der Verkäufer", "w": 5}, {"q": "zahl-", "a": "цапля отсчитывает", "acc": ["цапл"], "n": "", "e": "zahlen, die Zahl, bezahlen, zählen, erzählen", "w": 4}, {"q": "kost-", "a": "кость, которая дорого стоит", "acc": ["кост"], "n": "", "e": "kosten, die Kosten, kostbar, kostenlos", "w": 3}, {"q": "wert-", "a": "верстак оценки", "acc": ["верстак"], "n": "", "e": "der Wert, wertvoll, bewerten", "w": 3}, {"q": "teil-", "a": "отколотая плитка", "acc": ["плитк"], "n": "", "e": "teilen, der Teil, die Abteilung, mitteilen, das Urteil", "w": 2}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Изменение и разрушение", "items": [{"q": "schlag-", "a": "шлагбаум бьёт", "acc": ["шлагбаум"], "n": "", "e": "schlagen, der Schlag, vorschlagen, der Vorschlag", "w": 4}, {"q": "brech-", "a": "брешь в стене", "acc": ["бреш"], "n": "", "e": "brechen, der Bruch, zerbrechen, unterbrechen, das Verbrechen", "w": 4}, {"q": "schneid-", "a": "шнековый нож", "acc": ["шнеков"], "n": "", "e": "schneiden, der Schnitt, abschneiden, der Abschnitt", "w": 3}, {"q": "reiß-", "a": "рис рассыпается", "acc": ["рис"], "n": "", "e": "reißen, der Riss, zerreißen, der Reißverschluss", "w": 3}, {"q": "schließ-", "a": "шлиц, запирающий паз", "acc": ["шлиц"], "n": "", "e": "schließen, der Schluss, beschließen, der Entschluss", "w": 4}, {"q": "öffn-", "a": "офис распахнут", "acc": ["офис"], "n": "", "e": "öffnen, offen, die Öffnung, veröffentlichen", "w": 3}, {"q": "bind-", "a": "бинт связывает", "acc": ["бинт"], "n": "", "e": "binden, der Verband, verbinden, die Verbindung", "w": 4}, {"q": "scheid-", "a": "шайба, разрубленная надвое", "acc": ["шайб"], "n": "", "e": "scheiden, entscheiden, die Entscheidung, der Unterschied", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Поиск и выбор", "items": [{"q": "such-", "a": "сучок, который ищут", "acc": ["сучок"], "n": "", "e": "suchen, versuchen, der Versuch, untersuchen, der Besuch", "w": 5}, {"q": "find-", "a": "финка, найденный нож", "acc": ["финк"], "n": "", "e": "finden, erfinden, die Erfindung, stattfinden", "w": 5}, {"q": "treff-", "a": "трефы, карта попадания", "acc": ["треф"], "n": "", "e": "treffen, das Treffen, betreffen, zutreffen", "w": 4}, {"q": "wähl-", "a": "валик, которым выбирают", "acc": ["валик"], "n": "", "e": "wählen, die Wahl, auswählen, die Auswahl", "w": 4}, {"q": "prüf-", "a": "пруф, доказательство", "acc": ["пруф"], "n": "", "e": "prüfen, die Prüfung, überprüfen", "w": 3}, {"q": "rechn-", "a": "речной счётчик", "acc": ["речн", "счётчик", "счетчик"], "n": "", "e": "rechnen, die Rechnung, berechnen, ausgerechnet", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Именные корни", "items": [{"q": "Haus", "a": "дом", "acc": ["дом"], "n": "", "e": "das Haus, die Hausaufgabe, der Haushalt, zu Hause", "w": 5}, {"q": "Land", "a": "земля, страна", "acc": ["земл", "стран"], "n": "", "e": "das Land, die Landschaft, landen, der Ausländer", "w": 5}, {"q": "Zeit", "a": "время", "acc": ["врем"], "n": "", "e": "die Zeit, die Zeitung, gleichzeitig, die Freizeit", "w": 5}, {"q": "Weg", "a": "путь, дорога", "acc": ["пут", "дорог"], "n": "", "e": "der Weg, wegen, bewegen, die Bewegung, der Ausweg", "w": 5}, {"q": "Hand", "a": "рука", "acc": ["рук"], "n": "", "e": "die Hand, handeln, die Handlung, behandeln, das Handtuch", "w": 5}, {"q": "Recht", "a": "право, прямота", "acc": ["прав"], "n": "", "e": "das Recht, richtig, richten, der Bericht, die Richtung", "w": 4}, {"q": "Kraft", "a": "сила", "acc": ["сил"], "n": "", "e": "die Kraft, kräftig, verstärken", "w": 4}, {"q": "Werk / Zeug", "a": "работа / орудие", "acc": ["работ", "оруди", "инструмент"], "n": "", "e": "das Werk, das Werkzeug, das Flugzeug, das Fahrzeug", "w": 4}, {"q": "Grund", "a": "основание, дно", "acc": ["основ", "дно"], "n": "", "e": "der Grund, gründen, gründlich, der Hintergrund", "w": 4}, {"q": "Sicht", "a": "вид, зрение", "acc": ["вид", "зрен"], "n": "", "e": "die Sicht, die Absicht, die Aussicht, sichtbar", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": false, "ask": "Значение", "askRev": ""}]}];
+const SECTIONS = [{"id": "noun", "title": "Существительное", "desc": "Стихии рода, маркеры числа, функциональные глаголы, именные приставки и суффиксы.", "groups": [{"g": "Стихии — род", "items": [{"q": "der", "a": "раскалён докрасна, дымится, не притронуться", "acc": ["огон", "раскал", "гор", "красн"], "n": "Меняет поведение предмета, а не его цвет.", "e": "der Tisch, der Baum, der Kopf, der Weg", "w": 5}, {"q": "die", "a": "мокрый насквозь, с него течёт, он скользкий", "acc": ["вод", "мокр", "теч", "скольз"], "n": "Меняет поведение предмета, а не его цвет.", "e": "die Wand, die Hand, die Tür, die Stadt", "w": 5}, {"q": "das", "a": "каменный, тяжёлый, крошится по краям", "acc": ["камен", "камн", "тяжёл", "тяжел", "крош"], "n": "Меняет поведение предмета, а не его цвет.", "e": "das Buch, das Fenster, das Haus, das Kind", "w": 5}], "cols": ["Артикль", "Образ в сцене", "Примеры слов"], "about": "Обязательный третий слот существительного. Стихия должна менять поведение предмета, а не его цвет.", "bi": true, "ask": "Компонент образа", "askRev": "Артикль"}, {"g": "Маркеры числа", "items": [{"q": "-e", "a": "рядом встаёт второй такой же, оба стоят неподвижно", "acc": ["пар", "второй", "два", "рядом"], "n": "Жёсткие, форму держат — умлаута нет.", "e": "der Tisch → die Tische · das Jahr → die Jahre", "w": 5}, {"q": "-¨e", "a": "два раздутых предмета распирает, они выгибаются дугой", "acc": ["выгиба", "дуг", "распир", "разду"], "n": "", "e": "die Hand → die Hände · der Baum → die Bäume", "w": 5}, {"q": "-er", "a": "копии разлетаются во все стороны", "acc": ["разлёт", "разлет", "в стороны"], "n": "Жёсткие, форму держат — умлаута нет.", "e": "das Kind → die Kinder · das Bild → die Bilder", "w": 5}, {"q": "-¨er", "a": "раздутые копии лопаются в полёте", "acc": ["лопа", "полёт", "полет", "разду"], "n": "", "e": "das Buch → die Bücher · das Haus → die Häuser", "w": 5}, {"q": "-(e)n", "a": "копии валят потоком, конца не видно", "acc": ["ста", "поток", "валят"], "n": "Не две штуки и не горсть, а бесконечная лавина.", "e": "die Frau → die Frauen · die Zeitung → die Zeitungen", "w": 5}, {"q": "-nen", "a": "поток копий, каждая покрыта инеем", "acc": ["иней", "ста"], "n": "Иней — образ суффикса -in, от которого это множественное и образуется.", "e": "die Lehrerin → die Lehrerinnen", "w": 5}, {"q": "-s", "a": "копии шипят и растворяются в пену", "acc": ["шип", "пен", "раствор"], "n": "Заимствования: группа не выстраивается, а расползается.", "e": "das Auto → die Autos · das Hotel → die Hotels", "w": 5}, {"q": "-¨ чистый умлаут", "a": "предмет раздувается на месте, копий не прибавляется", "acc": ["разду", "наду", "на месте"], "n": "Штук столько же, но каждая распёрта изнутри.", "e": "der Vogel → die Vögel · der Apfel → die Äpfel", "w": 5}, {"q": "∅ (без изменения)", "a": "рядом зеркальный двойник, ничего не движется", "acc": ["двойник", "зеркал", "отражен"], "n": "", "e": "der Lehrer → die Lehrer · das Fenster → die Fenster", "w": 5}, {"q": "Dativ Pl.", "a": "вся группа обрастает хвостами", "acc": ["хвост"], "n": "Одно правило на весь язык: в дательном множественного добавляется -n.", "e": "", "w": 5}], "cols": ["Окончание", "Что происходит в сцене", "Примеры"], "about": "Ставится, только если множественное непредсказуемо по суффиксу.", "bi": true, "ask": "Компонент образа", "askRev": "Окончание"}, {"g": "Поведения функциональных глаголов", "items": [{"q": "treffen", "a": "бьёт в цель", "acc": ["цел", "бьёт", "бьет", "попада"], "n": "Принять решение, сделать выбор.", "e": "eine Entscheidung ~, eine Wahl ~, Maßnahmen ~", "w": 4}, {"q": "stellen", "a": "ставит вертикально", "acc": ["вертикал", "ставит"], "n": "Задать вопрос, подать заявление.", "e": "eine Frage ~, einen Antrag ~, eine Bedingung ~", "w": 4}, {"q": "halten", "a": "держит на весу", "acc": ["весу", "держ"], "n": "Сделать доклад, произнести речь.", "e": "einen Vortrag ~, eine Rede ~, ein Versprechen ~", "w": 4}, {"q": "machen", "a": "лепит руками", "acc": ["леп"], "n": "Внести предложение, допустить ошибку.", "e": "einen Vorschlag ~, einen Fehler ~, sich Sorgen ~", "w": 4}, {"q": "geben", "a": "протягивает", "acc": ["протяг"], "n": "Дать ответ, дать совет.", "e": "eine Antwort ~, einen Rat ~, eine Auskunft ~", "w": 4}, {"q": "nehmen", "a": "выхватывает", "acc": ["выхват"], "n": "Считаться с кем-л., проститься, сесть.", "e": "Rücksicht ~, Abschied ~, Platz ~", "w": 4}, {"q": "führen", "a": "ведёт за руку", "acc": ["вед"], "n": "Вести разговор, вести войну.", "e": "ein Gespräch ~, Krieg ~, eine Diskussion ~", "w": 4}, {"q": "ziehen", "a": "тянет", "acc": ["тян"], "n": "Сделать вывод, подвести итог.", "e": "einen Schluss ~, eine Bilanz ~, Konsequenzen ~", "w": 4}, {"q": "leisten", "a": "выкладывает", "acc": ["выклад"], "n": "Оказать помощь, оказать сопротивление.", "e": "Hilfe ~, Widerstand ~, einen Beitrag ~", "w": 4}, {"q": "fassen", "a": "сжимает в кулаке", "acc": ["кулак", "сжим"], "n": "Принять решение, набраться храбрости.", "e": "einen Entschluss ~, Mut ~, Vertrauen ~", "w": 4}, {"q": "erheben", "a": "поднимает над головой", "acc": ["голов", "поднима"], "n": "Предъявить претензию, заявить протест.", "e": "Anspruch ~, Einspruch ~", "w": 4}, {"q": "setzen", "a": "вбивает", "acc": ["вбива"], "n": "Установить границы, поставить цель.", "e": "Grenzen ~, ein Ziel ~, eine Frist ~", "w": 4}], "cols": ["Глагол", "Действие над ядром", "С какими существительными"], "about": "Для абстрактного существительного глагол — часть слова. По-русски решение «принимают», по-немецки в него «попадают».", "bi": true, "ask": "Поведение в сцене", "askRev": "Глагол"}, {"g": "Именные приставки", "items": [{"q": "un-", "a": "перечёркнутый круг", "acc": ["перечёркн", "перечеркн", "круг"], "n": "Отрицание.", "e": "das Unglück, die Unruhe, unmöglich", "w": 2}, {"q": "ur-", "a": "окаменелость", "acc": ["окамен"], "n": "Исконный, первичный.", "e": "der Ursprung, der Urwald, die Ursache", "w": 2}, {"q": "haupt-", "a": "корона", "acc": ["корон"], "n": "Главный.", "e": "die Hauptstadt, der Hauptbahnhof", "w": 2}, {"q": "grund-", "a": "фундамент", "acc": ["фундамент"], "n": "Основной, коренной.", "e": "das Grundgesetz, grundsätzlich", "w": 2}, {"q": "erz-", "a": "тройная нашивка", "acc": ["нашивк", "тройн"], "n": "Наивысшая степень.", "e": "der Erzfeind", "w": 2}, {"q": "riesen- / blitz-", "a": "великан / молния", "acc": ["великан", "молн"], "n": "Усиление.", "e": "der Riesenerfolg, blitzschnell", "w": 2}], "cols": ["Приставка", "Образ", "Примеры"], "about": "Меняют значение существительного или прилагательного, грамматики не несут.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Суффиксы: женский род", "items": [{"q": "-ung", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Zeitung, die Übung, die Genehmigung", "w": 4}, {"q": "-heit", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Freiheit, die Krankheit", "w": 4}, {"q": "-keit", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Möglichkeit, die Einsamkeit", "w": 4}, {"q": "-schaft", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Freundschaft, die Wissenschaft", "w": 4}, {"q": "-ei", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Bäckerei, die Polizei", "w": 4}, {"q": "-ion / -tion", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Nation, die Information", "w": 4}, {"q": "-ik", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Musik, die Technik, die Politik", "w": 4}, {"q": "-tät / -ität", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Universität, die Qualität", "w": 3}, {"q": "-ur", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Natur, die Kultur", "w": 3}, {"q": "-in", "a": "die, мн. -nen", "acc": ["die"], "n": "Удвоение n во множественном.", "e": "die Lehrerin, die Ärztin", "w": 4}, {"q": "-ie", "a": "die, мн. -n", "acc": ["die"], "n": "", "e": "die Chemie, die Energie, die Familie", "w": 2}, {"q": "-age / -ade", "a": "die, мн. -n", "acc": ["die"], "n": "", "e": "die Garage, die Marmelade", "w": 2}, {"q": "-anz / -enz", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Toleranz, die Konferenz", "w": 2}, {"q": "-ette / -esse", "a": "die, мн. -n", "acc": ["die"], "n": "Но das Interesse.", "e": "die Zigarette, die Delikatesse", "w": 2}, {"q": "-t отглагольный", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Fahrt, die Sicht, die Schrift, die Macht", "w": 4}, {"q": "-e неодушевлённое", "a": "die, мн. -n", "acc": ["die"], "n": "Исключения: der Name, der Käse, das Auge, das Ende, das Interesse, das Erbe.", "e": "die Lampe, die Blume, die Sprache", "w": 4}], "cols": ["Суффикс", "Род и множественное", "Примеры"], "about": "Образа не имеют: род кодируется стихией. Надёжные соответствия, но не гарантии — артикль смотрится в словаре.", "bi": false, "ask": "Грамматика", "askRev": ""}, {"g": "Суффиксы: средний род", "items": [{"q": "-chen / -lein", "a": "das, мн. ∅", "acc": ["das"], "n": "", "e": "das Mädchen, das Brötchen, das Fräulein", "w": 5}, {"q": "-ment", "a": "das, мн. -e", "acc": ["das"], "n": "", "e": "das Instrument, das Dokument", "w": 3}, {"q": "-um", "a": "das, мн. -en / -a", "acc": ["das"], "n": "", "e": "das Zentrum → Zentren · das Praktikum → Praktika", "w": 3}, {"q": "-o", "a": "das, мн. -s", "acc": ["das"], "n": "Исключения: die Avocado, der Euro.", "e": "das Auto, das Kino, das Büro", "w": 3}, {"q": "Ge-…-e циркумфикс", "a": "das, мн. ∅", "acc": ["das"], "n": "", "e": "das Gebäude, das Gemälde, das Gemüse, das Gebirge", "w": 4}, {"q": "-tum", "a": "das, мн. -¨er", "acc": ["das"], "n": "Исключения: der Reichtum, der Irrtum.", "e": "das Eigentum", "w": 2}, {"q": "-icht", "a": "das, мн. -e", "acc": ["das"], "n": "", "e": "das Dickicht", "w": 1}, {"q": "-nis", "a": "чаще das, но треть die", "acc": ["das", "die"], "n": "die: Kenntnis, Erkenntnis, Erlaubnis, Wildnis, Finsternis.", "e": "das Ergebnis, das Geheimnis, das Verständnis", "w": 3}, {"q": "Ge- голый префикс", "a": "чаще das, но есть der и die", "acc": ["das"], "n": "der: Gedanke, Geruch, Geschmack, Gewinn. die: Gefahr, Geduld, Gewalt, Geschichte.", "e": "das Gespräch, das Getränk", "w": 4}], "cols": ["Суффикс", "Род и множественное", "Примеры"], "about": "То же: справочное знание, а не образ.", "bi": false, "ask": "Грамматика", "askRev": ""}, {"g": "Суффиксы: мужской род", "items": [{"q": "-er отглагольный", "a": "der, мн. ∅", "acc": ["der"], "n": "От глагола: lehren → der Lehrer.", "e": "der Lehrer, der Fahrer", "w": 5}, {"q": "-er от существительного", "a": "der, мн. ∅", "acc": ["der"], "n": "От топонима или существительного.", "e": "der Berliner, der Ausländer", "w": 4}, {"q": "-ler / -ner", "a": "der, мн. ∅", "acc": ["der"], "n": "", "e": "der Sportler, der Rentner, der Gärtner", "w": 3}, {"q": "-ling", "a": "der, мн. -e", "acc": ["der"], "n": "", "e": "der Frühling, der Lehrling", "w": 2}, {"q": "-ismus", "a": "der, мн. -men", "acc": ["der"], "n": "", "e": "der Kapitalismus", "w": 2}, {"q": "-ant / -ent", "a": "der, мн. -en, слабое склонение", "acc": ["der"], "n": "", "e": "der Praktikant, der Student", "w": 3}, {"q": "-ist", "a": "der, мн. -en, слабое склонение", "acc": ["der"], "n": "", "e": "der Journalist", "w": 3}, {"q": "-oge", "a": "der, мн. -n, слабое склонение", "acc": ["der"], "n": "", "e": "der Biologe", "w": 1}, {"q": "-graph / -soph", "a": "der, мн. -en, слабое склонение", "acc": ["der"], "n": "", "e": "der Fotograf, der Philosoph", "w": 1}, {"q": "-eur", "a": "der, мн. -e", "acc": ["der"], "n": "", "e": "der Ingenieur, der Friseur", "w": 2}, {"q": "-or", "a": "der, мн. -en", "acc": ["der"], "n": "", "e": "der Motor, der Doktor", "w": 3}, {"q": "-us", "a": "der", "acc": ["der"], "n": "Латинские абстрактные → -en. Бытовые: Bus → Busse.", "e": "der Rhythmus → Rhythmen", "w": 2}, {"q": "-ich / -ig", "a": "der, мн. -e", "acc": ["der"], "n": "", "e": "der Teppich, der Honig, der König", "w": 2}, {"q": "-e одушевлённое", "a": "der, слабое склонение", "acc": ["der"], "n": "Склоняются со слабым -n.", "e": "der Junge, der Kollege, der Löwe, der Franzose", "w": 4}], "cols": ["Суффикс", "Род и множественное", "Примеры"], "about": "Тест на «-er»: есть глагол-источник → der; есть существительное или топоним → der; нет ни того ни другого → правило не применяется.", "bi": false, "ask": "Грамматика", "askRev": ""}]}, {"id": "verb", "title": "Глагол", "desc": "Опоры, крепежи управления, возвратность, чередование основы, комнаты претерита, глагольные приставки и суффиксы.", "groups": [{"g": "Опоры — вспомогательный глагол", "items": [{"q": "haben", "a": "предмет зажат у вас в руках, вы его не отпускаете", "acc": ["рук", "держ", "зажат"], "n": "Большинство глаголов. Переходные всегда haben.", "e": "hat gearbeitet, hat gelesen, hat gewartet", "w": 5}, {"q": "sein", "a": "предмет вырывается и улетает сам", "acc": ["вырыва", "улета", "лет", "сам"], "n": "Картинка совпадает с движением, но это подсказка: bleiben берёт sein без движения.", "e": "ist gefahren, ist gekommen, ist geblieben", "w": 5}], "cols": ["Вспомогательный", "Образ в сцене", "Примеры"], "about": "Третий слот глагола. Картинка sein совпадает с движением, но это подсказка: bleiben берёт sein без движения.", "bi": true, "ask": "Компонент образа", "askRev": "Вспомогательный глагол"}, {"g": "Крепежи — управление", "items": [{"q": "auf", "a": "крыша", "acc": ["крыш"], "n": "Akkusativ — крепёж обрушивается.", "e": "warten auf, sich freuen auf, achten auf, hoffen auf", "w": 5}, {"q": "an", "a": "гвоздь", "acc": ["гвозд"], "n": "Akk и Dat: denken an (Akk), teilnehmen an (Dat).", "e": "denken an, sich erinnern an, leiden an", "w": 5}, {"q": "für", "a": "зонт защищающий", "acc": ["зонт"], "n": "Akkusativ.", "e": "sich interessieren für, danken für, sorgen für", "w": 5}, {"q": "über", "a": "мост", "acc": ["мост"], "n": "Akkusativ.", "e": "sprechen über, nachdenken über, sich ärgern über", "w": 5}, {"q": "mit", "a": "цепь", "acc": ["цеп"], "n": "Dativ.", "e": "rechnen mit, anfangen mit, sich beschäftigen mit", "w": 5}, {"q": "nach", "a": "стрелка вслед", "acc": ["стрелк"], "n": "Dativ.", "e": "fragen nach, suchen nach, riechen nach", "w": 5}, {"q": "von", "a": "магнит отрывающий", "acc": ["магнит"], "n": "Dativ.", "e": "träumen von, abhängen von, erzählen von", "w": 5}, {"q": "zu", "a": "замо́к", "acc": ["замок", "замо"], "n": "Dativ.", "e": "gehören zu, führen zu, gratulieren zu", "w": 5}, {"q": "in", "a": "коробка", "acc": ["коробк"], "n": "Akk и Dat: sich verlieben in (Akk), bestehen in (Dat).", "e": "sich verlieben in, einwilligen in", "w": 5}, {"q": "um", "a": "верёвка вокруг", "acc": ["верёвк", "веревк"], "n": "Akkusativ.", "e": "bitten um, sich kümmern um, kämpfen um", "w": 5}, {"q": "Akkusativ", "a": "крепёж бьёт, врезается, обрушивается", "acc": ["бьёт", "бьет", "обруш", "врез", "удар"], "n": "", "e": "", "w": 5}, {"q": "Dativ", "a": "крепёж лежит неподвижно", "acc": ["лежит", "неподвиж"], "n": "", "e": "", "w": 5}, {"q": "голый датив (без предлога)", "a": "объект лежит на подушке, к нему не прикасаются", "acc": ["подушк"], "n": "helfen, danken, folgen, gefallen, gehören, passen, begegnen, gratulieren, vertrauen, antworten, glauben, dienen, schaden, fehlen", "e": "", "w": 5}], "cols": ["Предлог или падеж", "Крепёж в сцене", "Примеры"], "about": "Предлог задаётся предметом, падеж — его движением: Akkusativ бьёт, Dativ лежит.", "bi": true, "ask": "Компонент образа", "askRev": "Предлог или падеж"}, {"g": "Возвратность", "items": [{"q": "sich", "a": "зеркало, действие возвращается к вам", "acc": ["зеркал"], "n": "Разбитое зеркало занято приставкой zer-.", "e": "", "w": 5}, {"q": "sich + Akkusativ", "a": "зеркало прямо перед вами", "acc": ["перед", "прямо"], "n": "sich waschen, sich freuen, sich setzen", "e": "sich waschen, sich freuen, sich setzen", "w": 5}, {"q": "sich + Dativ", "a": "зеркало сбоку, вы смотрите не прямо в него", "acc": ["сбок"], "n": "sich die Hände waschen, sich etwas merken", "e": "sich die Hände waschen, sich etwas merken", "w": 5}], "cols": ["Форма", "Образ", "Примеры"], "about": "Немецкие возвратные глаголы часто не совпадают с русскими: sich erinnern — вспоминать, без «-ся».", "bi": true, "ask": "Компонент образа", "askRev": "Форма"}, {"g": "Чередование основы", "items": [{"q": "a → ä", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "fahren → fährt, tragen, schlafen", "e": "fahren → fährt, tragen, schlafen", "w": 5}, {"q": "o → ö", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "stoßen → stößt", "e": "stoßen → stößt", "w": 5}, {"q": "au → äu", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "laufen → läuft", "e": "laufen → läuft", "w": 5}, {"q": "e → i / ie", "a": "предмет усыхает и стягивается (i) или вытягивается в длину (ie)", "acc": ["усыха", "стягив", "вытягив", "сжим"], "n": "Краткое e даёт стягивание, долгое — вытягивание. Исключения: geben, nehmen, treten.", "e": "helfen → hilft · sehen → sieht", "w": 5}], "cols": ["Чередование", "Маркер в сцене", "Примеры"], "about": "Во 2-м и 3-м лице единственного числа настоящего времени.", "bi": true, "ask": "Компонент образа", "askRev": "Чередование"}, {"g": "Комнаты претерита", "items": [{"q": "ei – ie/i", "a": "библиотека, два угла", "acc": ["библиотек"], "n": "Звонкий согласный → ie–ie, глухой → i–i. Исключения: leiden, schneiden.", "e": "bleiben, schreiben, steigen · greifen, reiten, beißen", "w": 3}, {"q": "ie – o – o", "a": "мастерская", "acc": ["мастерск"], "n": "", "e": "fliegen, ziehen, bieten, schließen, verlieren", "w": 3}, {"q": "i – a – u", "a": "подвал", "acc": ["подвал"], "n": "", "e": "trinken, finden, singen, springen", "w": 3}, {"q": "i – a – o", "a": "котельная", "acc": ["котельн"], "n": "", "e": "beginnen, gewinnen, schwimmen", "w": 3}, {"q": "e – a – o", "a": "кухня", "acc": ["кухн"], "n": "", "e": "nehmen, sprechen, helfen, sterben, werfen", "w": 3}, {"q": "e – a – e", "a": "столовая", "acc": ["столов"], "n": "", "e": "geben, sehen, essen, lesen, treten", "w": 3}, {"q": "i / ie – a – e", "a": "кабинет", "acc": ["кабинет"], "n": "", "e": "sitzen, bitten, liegen", "w": 3}, {"q": "e / ü – o – o", "a": "ванная", "acc": ["ванн"], "n": "", "e": "heben, lügen, betrügen, schwören", "w": 3}, {"q": "a – u – a", "a": "гараж", "acc": ["гараж"], "n": "", "e": "fahren, tragen, laden, schlagen", "w": 3}, {"q": "претерит ie/i, гласная возвращается", "a": "сад, два угла", "acc": ["сад"], "n": "Долгий ie: fallen, halten, lassen. Краткий i: fangen, hängen.", "e": "fallen, halten, lassen · fangen, hängen", "w": 3}, {"q": "o – a – o", "a": "прихожая", "acc": ["прихож"], "n": "", "e": "kommen", "w": 3}, {"q": "нерегулярные", "a": "кладовка", "acc": ["кладовк"], "n": "", "e": "gehen, stehen, tun, sein, werden, bringen, denken, wissen", "w": 5}, {"q": "слабая парадигма омографа", "a": "коридор", "acc": ["коридор"], "n": "hängen/hängte, erschrecken/erschreckte, schaffen/schaffte, bewegen/bewegte, wiegen/wiegte, senden/sendete", "e": "", "w": 2}], "cols": ["Схема", "Комната", "Глаголы"], "about": "Комната восстанавливает класс и сокращает число независимых единиц. Форму она не выдаёт — форма проверяется.", "bi": false, "ask": "Локация", "askRev": ""}, {"g": "Приставки: неотделяемые", "items": [{"q": "be-", "a": "бетон заливает поверхность", "acc": ["бетон"], "n": "Охват объекта, переходность. Не берёт ge- в перфекте.", "e": "antworten → beantworten · suchen → besuchen", "w": 5}, {"q": "ge-", "a": "серая гиря", "acc": ["гир"], "n": "Результат, совместность. Синхронно непродуктивна.", "e": "hören → gehören · fallen → gefallen", "w": 3}, {"q": "er-", "a": "эрудит добивается своего", "acc": ["эрудит"], "n": "Достижение результата, начало.", "e": "finden → erfinden · kennen → erkennen", "w": 5}, {"q": "ver-", "a": "вертолёт улетает не туда", "acc": ["вертол"], "n": "«Не туда», порча, израсходование, завершение.", "e": "sich verlaufen · verkaufen · versprechen", "w": 5}, {"q": "zer-", "a": "зеркало вдребезги", "acc": ["зеркал", "вдребезг"], "n": "Разрушение на части.", "e": "brechen → zerbrechen · stören → zerstören", "w": 4}, {"q": "ent-", "a": "энтомолог отрывает крыло", "acc": ["энтомолог"], "n": "Отделение, удаление, начало.", "e": "decken → entdecken · lassen → entlassen", "w": 4}, {"q": "emp-", "a": "тот же энтомолог, но шёпотом", "acc": ["шёпот", "шепот", "энтомолог"], "n": "Вариант ent-, три глагола.", "e": "empfehlen, empfangen, empfinden", "w": 2}, {"q": "miss-", "a": "стрела мимо", "acc": ["стрел", "мимо"], "n": "Неудача, ошибка.", "e": "missverstehen, misslingen, misstrauen", "w": 3}], "cols": ["Приставка", "Образ, приварен к корню", "Примеры"], "about": "Всегда безударные, не берут ge- в перфекте.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Приставки: отделяемые", "items": [{"q": "ab-", "a": "абордажный крюк отрывает", "acc": ["абордаж", "крюк"], "n": "Прочь, вниз, завершение.", "e": "abfahren, abnehmen, abschließen", "w": 5}, {"q": "an-", "a": "антенна касается", "acc": ["антенн"], "n": "Касание, начало, частичность.", "e": "anrufen, anfangen, anziehen", "w": 5}, {"q": "auf-", "a": "лифт взмывает", "acc": ["лифт"], "n": "Вверх, открытие, внезапность.", "e": "aufstehen, aufmachen, aufhören, aufpassen", "w": 5}, {"q": "aus-", "a": "дверь наружу", "acc": ["двер", "наруж"], "n": "Наружу, до конца, исчерпание.", "e": "ausgehen, aussehen, ausmachen", "w": 5}, {"q": "bei-", "a": "приставная лестница", "acc": ["лестниц"], "n": "Рядом, добавление.", "e": "beitragen, beibringen", "w": 2}, {"q": "ein-", "a": "воронка втягивает", "acc": ["воронк"], "n": "Внутрь.", "e": "einsteigen, einladen, einkaufen", "w": 5}, {"q": "fort- / weg-", "a": "указатель прочь", "acc": ["указател"], "n": "Прочь, продолжение.", "e": "fortsetzen, weggehen", "w": 3}, {"q": "her-", "a": "рука тянет к себе", "acc": ["тянет к себе", "к себе"], "n": "К говорящему.", "e": "herkommen, herstellen", "w": 3}, {"q": "hin-", "a": "рука отталкивает", "acc": ["отталкива"], "n": "От говорящего.", "e": "hingehen, hinfallen, hinweisen", "w": 3}, {"q": "los-", "a": "сорванная цепь", "acc": ["сорван", "цеп"], "n": "Отделение, внезапное начало.", "e": "losfahren, loslassen", "w": 3}, {"q": "mit-", "a": "митинг, толпа", "acc": ["митинг", "толп"], "n": "Вместе, участие.", "e": "mitkommen, mitbringen, mitteilen", "w": 4}, {"q": "nach-", "a": "ночной преследователь", "acc": ["ночн", "преслед"], "n": "Вслед, после, повторно.", "e": "nachdenken, nachfragen, nachholen", "w": 4}, {"q": "vor-", "a": "вор бежит впереди", "acc": ["вор"], "n": "Перед, заранее, вперёд.", "e": "vorstellen, vorbereiten, vorschlagen", "w": 5}, {"q": "zu-", "a": "зубы смыкаются", "acc": ["зуб"], "n": "Закрытие, направление к.", "e": "zumachen, zuhören, zunehmen", "w": 5}, {"q": "zurück-", "a": "пятящийся рак", "acc": ["рак", "пятящ"], "n": "Назад.", "e": "zurückkommen, zurückgeben", "w": 4}, {"q": "zusammen-", "a": "сжатый кулак", "acc": ["кулак"], "n": "Воедино.", "e": "zusammenarbeiten, zusammenfassen", "w": 3}, {"q": "weiter-", "a": "бегущая дорожка", "acc": ["дорожк", "бегущ"], "n": "Дальше, продолжение.", "e": "weitermachen, weitergehen", "w": 3}, {"q": "teil-", "a": "разрезанный пирог", "acc": ["пирог"], "n": "Участие.", "e": "teilnehmen", "w": 2}, {"q": "fest-", "a": "вбитый костыль", "acc": ["костыл"], "n": "Прочно, фиксация.", "e": "festhalten, feststellen", "w": 2}, {"q": "statt-", "a": "пустая сцена", "acc": ["сцен"], "n": "Состояться.", "e": "stattfinden", "w": 2}], "cols": ["Приставка", "Образ, отлетает от корня", "Примеры"], "about": "Всегда ударные, ge- встаёт между приставкой и корнем.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Приставки: переменные", "items": [{"q": "über-", "a": "великан перешагивает", "acc": ["великан"], "n": "Ударная — отделяемая: ˈübersetzen перевезти. Безударная: überˈsetzen переводить.", "e": "", "w": 4}, {"q": "unter-", "a": "подвал", "acc": ["подвал"], "n": "ˈunterbringen разместить · unterˈbrechen прервать.", "e": "", "w": 4}, {"q": "um-", "a": "зонт крутится", "acc": ["зонт"], "n": "ˈumfahren сбить · umˈfahren объехать.", "e": "", "w": 4}, {"q": "durch-", "a": "дуршлаг", "acc": ["дуршлаг"], "n": "ˈdurchfallen провалиться · durchˈschauen раскусить.", "e": "", "w": 4}, {"q": "wider-", "a": "щит", "acc": ["щит"], "n": "ˈwiderspiegeln отражать · widerˈsprechen противоречить.", "e": "", "w": 2}, {"q": "wieder-", "a": "бумеранг", "acc": ["бумеранг"], "n": "ˈwiederkommen · wiederˈholen повторять.", "e": "", "w": 3}, {"q": "hinter-", "a": "спина", "acc": ["спин"], "n": "hinterˈlassen оставить.", "e": "", "w": 2}, {"q": "ударение на приставке", "a": "приставка отлетает от корня", "acc": ["отлета", "отрыва", "отделя"], "n": "Отделяемая.", "e": "", "w": 5}, {"q": "ударение на корне", "a": "приставка приварена к корню намертво", "acc": ["приварен", "намертво", "сросл"], "n": "Неотделяемая.", "e": "", "w": 5}], "cols": ["Приставка", "Образ", "Ударная и безударная формы"], "about": "Отделяемость определяется ударением, а не смыслом. Ударение видно в транскрипции.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Суффиксы глаголов", "items": [{"q": "-ieren", "a": "не берёт ge- в перфекте", "acc": ["ge-", "не берёт ge", "без ge"], "n": "", "e": "studieren → hat studiert · funktionieren", "w": 4}, {"q": "-isieren", "a": "приведение в состояние", "acc": ["привед", "состоян"], "n": "", "e": "realisieren, modernisieren", "w": 2}, {"q": "-igen", "a": "делать таким", "acc": ["делать так"], "n": "", "e": "beruhigen, reinigen, entschuldigen, genehmigen", "w": 3}, {"q": "-eln / -ern", "a": "ослабленное, повторяющееся действие", "acc": ["ослаблен", "повторя"], "n": "", "e": "lächeln, klingeln, wandern", "w": 2}], "cols": ["Суффикс", "Особенность", "Примеры"], "about": "Влияют на форму, а не на род.", "bi": false, "ask": "Грамматика", "askRev": ""}]}, {"id": "adj", "title": "Прилагательное", "desc": "Степени сравнения, крепежи управления, адъективные суффиксы.", "groups": [{"g": "Степени сравнения", "items": [{"q": "регулярная степень", "a": "ничего не меняется", "acc": ["ничего", "нет"], "n": "", "e": "schnell → schneller → am schnellsten", "w": 5}, {"q": "умлаут в сравнении", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "alt, jung, lang, kurz, warm, kalt, stark, scharf, hart, klug, dumm, arm, schwach, grob, gesund, krank", "e": "alt → älter · jung → jünger", "w": 5}, {"q": "неправильная степень", "a": "предмет подменяется другим", "acc": ["подмен", "друг"], "n": "gut → besser · viel → mehr · gern → lieber", "e": "gut → besser · viel → mehr · gern → lieber · hoch → höher · nah → näher", "w": 5}], "cols": ["Тип", "Маркер в сцене", "Примеры"], "about": "Единственное дополнение, специфичное для прилагательного.", "bi": false, "ask": "Компонент образа", "askRev": ""}, {"g": "Крепежи прилагательных", "items": [{"q": "stolz auf (+ Akk)", "a": "крыша, обрушивается", "acc": ["крыш"], "n": "", "e": "stolz auf seinen Sohn", "w": 3}, {"q": "böse auf (+ Akk)", "a": "крыша, обрушивается", "acc": ["крыш"], "n": "", "e": "böse auf den Nachbarn", "w": 3}, {"q": "zufrieden mit (+ Dat)", "a": "цепь, лежит неподвижно", "acc": ["цеп"], "n": "", "e": "zufrieden mit dem Ergebnis", "w": 3}, {"q": "interessiert an (+ Dat)", "a": "гвоздь, лежит неподвижно", "acc": ["гвозд"], "n": "", "e": "interessiert an Musik", "w": 3}, {"q": "bereit zu (+ Dat)", "a": "замо́к", "acc": ["замок", "замо"], "n": "", "e": "bereit zum Aufbruch", "w": 3}, {"q": "fähig zu (+ Dat)", "a": "замо́к", "acc": ["замок", "замо"], "n": "", "e": "fähig zu allem", "w": 3}, {"q": "reich / arm an (+ Dat)", "a": "гвоздь", "acc": ["гвозд"], "n": "", "e": "reich an Vitaminen", "w": 3}, {"q": "abhängig von (+ Dat)", "a": "магнит", "acc": ["магнит"], "n": "", "e": "abhängig von der Meinung", "w": 3}, {"q": "verantwortlich für (+ Akk)", "a": "зонт", "acc": ["зонт"], "n": "", "e": "verantwortlich für das Projekt", "w": 3}, {"q": "überzeugt von (+ Dat)", "a": "магнит", "acc": ["магнит"], "n": "", "e": "überzeugt von der Idee", "w": 3}], "cols": ["Прилагательное с предлогом", "Крепёж", "Пример"], "about": "Прилагательные берут те же крепежи, что и глаголы — новых образов не требуется.", "bi": false, "ask": "Компонент образа", "askRev": ""}, {"g": "Суффиксы прилагательных", "items": [{"q": "-ig", "a": "обладающий признаком", "acc": ["обладающ", "признак"], "n": "", "e": "fleißig, richtig, wichtig", "w": 4}, {"q": "-lich", "a": "свойственный, слегка", "acc": ["свойствен", "слегка"], "n": "", "e": "freundlich, möglich, rötlich", "w": 4}, {"q": "-isch", "a": "относящийся", "acc": ["относящ"], "n": "", "e": "praktisch, kindisch, russisch", "w": 4}, {"q": "-bar", "a": "возможность", "acc": ["возможн"], "n": "", "e": "essbar, sichtbar, machbar", "w": 4}, {"q": "-sam", "a": "склонность", "acc": ["склонност"], "n": "", "e": "langsam, sparsam, aufmerksam", "w": 3}, {"q": "-haft", "a": "подобие", "acc": ["подоби"], "n": "", "e": "fehlerhaft, dauerhaft", "w": 2}, {"q": "-los / -frei", "a": "отсутствие", "acc": ["отсутств"], "n": "", "e": "arbeitslos, bleifrei", "w": 4}, {"q": "-voll / -reich", "a": "изобилие", "acc": ["изобили"], "n": "", "e": "wertvoll, erfolgreich", "w": 3}, {"q": "-arm", "a": "бедный чем-либо", "acc": ["бедн"], "n": "", "e": "fettarm", "w": 1}, {"q": "-mäßig / -gemäß", "a": "соответствующий", "acc": ["соответств"], "n": "", "e": "regelmäßig, zeitgemäß", "w": 2}, {"q": "-fähig", "a": "способный", "acc": ["способн"], "n": "", "e": "leistungsfähig", "w": 2}, {"q": "-wert / -würdig", "a": "достойный", "acc": ["достойн"], "n": "", "e": "sehenswert, glaubwürdig", "w": 2}, {"q": "-artig / -förmig", "a": "подобный, по форме", "acc": ["подобн", "форм"], "n": "", "e": "großartig, kreisförmig", "w": 2}, {"q": "-fach", "a": "кратность", "acc": ["кратн"], "n": "", "e": "mehrfach, zweifach", "w": 2}], "cols": ["Суффикс", "Значение", "Примеры"], "about": "Справочное знание: грамматики не несут, образа не требуют.", "bi": false, "ask": "Грамматика", "askRev": ""}]}, {"id": "root", "title": "Корни", "desc": "Корневой реестр: один образ обслуживает всё словообразовательное гнездо.", "groups": [{"g": "Речь и мысль", "items": [{"q": "sag-", "a": "сага, которую рассказывают", "acc": ["сага"], "n": "", "e": "sagen, die Aussage, absagen, zusagen", "w": 5}, {"q": "sprech- / sprach-", "a": "спираль изо рта", "acc": ["спирал"], "n": "", "e": "sprechen, die Sprache, das Gespräch, versprechen", "w": 5}, {"q": "red-", "a": "редька во рту", "acc": ["редьк"], "n": "", "e": "reden, die Rede, verabreden, die Verabredung", "w": 4}, {"q": "ruf-", "a": "рупор", "acc": ["рупор"], "n": "", "e": "rufen, der Ruf, anrufen, der Beruf", "w": 5}, {"q": "frag-", "a": "фрак швейцара", "acc": ["фрак"], "n": "", "e": "fragen, die Frage, nachfragen, befragen", "w": 5}, {"q": "antwort-", "a": "ответный удар", "acc": ["ответн", "удар"], "n": "", "e": "antworten, die Antwort, die Verantwortung", "w": 4}, {"q": "denk-", "a": "купюра на лбу", "acc": ["купюр"], "n": "", "e": "denken, der Gedanke, nachdenken, das Denkmal", "w": 5}, {"q": "wiss-", "a": "висок, который трут", "acc": ["висок"], "n": "", "e": "wissen, die Wissenschaft, gewiss", "w": 3}, {"q": "kenn-", "a": "кегля, которую узнают", "acc": ["кегл"], "n": "", "e": "kennen, die Kenntnis, erkennen, bekannt", "w": 4}, {"q": "lern- / lehr-", "a": "гидра у школьной доски", "acc": ["гидр"], "n": "", "e": "lernen, lehren, der Lehrer, der Lehrling", "w": 4}, {"q": "glaub-", "a": "глубина, в которую верят", "acc": ["глубин"], "n": "", "e": "glauben, der Glaube, unglaublich", "w": 3}, {"q": "mein-", "a": "мина, которую полагают", "acc": ["мин"], "n": "", "e": "meinen, die Meinung, gemeinsam", "w": 3}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Движение", "items": [{"q": "geh-", "a": "гейзер выбрасывает", "acc": ["гейзер"], "n": "", "e": "gehen, der Gang, vergehen, der Ausgang", "w": 5}, {"q": "komm-", "a": "комок прикатился", "acc": ["комок"], "n": "", "e": "kommen, die Ankunft, die Zukunft, bekommen", "w": 5}, {"q": "fahr-", "a": "фара в темноте", "acc": ["фар"], "n": "", "e": "fahren, die Fahrt, die Erfahrung, die Fahrkarte", "w": 5}, {"q": "flieg-", "a": "флигель взлетает", "acc": ["флигел"], "n": "", "e": "fliegen, der Flug, das Flugzeug", "w": 3}, {"q": "lauf-", "a": "лафет катится", "acc": ["лафет"], "n": "", "e": "laufen, der Lauf, verlaufen, die Laufbahn", "w": 5}, {"q": "zieh-", "a": "цепь, которую тянут", "acc": ["цеп"], "n": "", "e": "ziehen, der Zug, erziehen, umziehen, anziehen", "w": 5}, {"q": "trag-", "a": "трактор тащит", "acc": ["трактор"], "n": "", "e": "tragen, der Vertrag, ertragen, der Antrag", "w": 5}, {"q": "bring-", "a": "брынза в руках", "acc": ["брынз"], "n": "", "e": "bringen, verbringen, mitbringen, beibringen", "w": 5}, {"q": "steig-", "a": "стейк на вертеле поднимается", "acc": ["стейк"], "n": "", "e": "steigen, einsteigen, umsteigen, die Steigung", "w": 3}, {"q": "führ-", "a": "фюрер ведёт колонну", "acc": ["фюрер"], "n": "", "e": "führen, die Führung, einführen, ausführen", "w": 4}, {"q": "folg-", "a": "фольга тянется следом", "acc": ["фольг"], "n": "", "e": "folgen, die Folge, der Erfolg, verfolgen", "w": 4}, {"q": "fall-", "a": "фал, обрывающийся канат", "acc": ["фал"], "n": "", "e": "fallen, der Fall, gefallen, der Zufall, der Unfall", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Положение и состояние", "items": [{"q": "steh-", "a": "штанга стоит вертикально", "acc": ["штанг"], "n": "", "e": "stehen, verstehen, bestehen, entstehen, der Zustand", "w": 5}, {"q": "stell-", "a": "стела водружается", "acc": ["стел"], "n": "", "e": "stellen, die Stelle, vorstellen, herstellen, feststellen", "w": 5}, {"q": "setz-", "a": "сеть набрасывается", "acc": ["сет"], "n": "", "e": "setzen, der Satz, ersetzen, übersetzen, besetzen", "w": 5}, {"q": "leg-", "a": "лего укладывается", "acc": ["лего"], "n": "", "e": "legen, die Lage, überlegen, anlegen", "w": 4}, {"q": "halt-", "a": "халат, за который держат", "acc": ["халат"], "n": "", "e": "halten, behalten, erhalten, der Inhalt, der Aufenthalt", "w": 5}, {"q": "bleib-", "a": "блин прилип", "acc": ["блин"], "n": "", "e": "bleiben", "w": 3}, {"q": "lass-", "a": "лассо, которое отпускают", "acc": ["лассо"], "n": "", "e": "lassen, verlassen, zuverlässig, entlassen, zulassen", "w": 5}, {"q": "wohn-", "a": "вонючий подъезд", "acc": ["вонюч"], "n": "", "e": "wohnen, die Wohnung, der Einwohner, die Gewohnheit", "w": 4}, {"q": "leb-", "a": "лебедь живая", "acc": ["лебед"], "n": "", "e": "leben, das Leben, erleben, das Erlebnis", "w": 5}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Восприятие", "items": [{"q": "seh-", "a": "зев распахнутый", "acc": ["зев"], "n": "", "e": "sehen, die Sicht, die Absicht, die Aussicht", "w": 5}, {"q": "schau-", "a": "шов, который разглядывают", "acc": ["шов"], "n": "", "e": "schauen, anschauen, die Anschauung", "w": 3}, {"q": "hör-", "a": "хорь насторожился", "acc": ["хор"], "n": "", "e": "hören, aufhören, gehören, zuhören", "w": 5}, {"q": "fühl-", "a": "шаман щупает", "acc": ["шаман"], "n": "", "e": "fühlen, das Gefühl, mitfühlen", "w": 3}, {"q": "fass-", "a": "фас! — хватай", "acc": ["фас"], "n": "", "e": "fassen, verfassen, zusammenfassen", "w": 3}, {"q": "greif-", "a": "гриф вцепился", "acc": ["гриф"], "n": "", "e": "greifen, der Begriff, angreifen", "w": 3}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Действие и труд", "items": [{"q": "mach-", "a": "махина работает", "acc": ["махин"], "n": "", "e": "machen, aufmachen, mitmachen, ausmachen", "w": 5}, {"q": "tu-", "a": "туфля топает", "acc": ["туфл"], "n": "", "e": "tun, die Tat, tätig, die Tätigkeit", "w": 5}, {"q": "arbeit-", "a": "арбуз, который таскают", "acc": ["арбуз"], "n": "", "e": "arbeiten, die Arbeit, bearbeiten, verarbeiten", "w": 5}, {"q": "schaff-", "a": "шкаф сколачивают", "acc": ["шкаф"], "n": "", "e": "schaffen, beschaffen, erschaffen", "w": 3}, {"q": "wirk-", "a": "вихрь действует", "acc": ["вихр"], "n": "", "e": "wirken, die Wirkung, wirklich, verwirklichen", "w": 3}, {"q": "bau-", "a": "баул кладут в стену", "acc": ["баул"], "n": "", "e": "bauen, der Bau, das Gebäude, der Bauer, aufbauen", "w": 4}, {"q": "brauch-", "a": "брошь, которая нужна", "acc": ["брош"], "n": "", "e": "brauchen, der Gebrauch, verbrauchen", "w": 3}, {"q": "nutz-", "a": "нож, полезный инструмент", "acc": ["нож"], "n": "", "e": "nutzen, benutzen, nützlich, ausnutzen", "w": 3}, {"q": "dien-", "a": "дыня на подносе", "acc": ["дын"], "n": "", "e": "dienen, der Dienst, verdienen, bedienen", "w": 3}, {"q": "helf-", "a": "эльф помогает", "acc": ["эльф"], "n": "", "e": "helfen, die Hilfe, behilflich", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Обмен и обладание", "items": [{"q": "geb-", "a": "гэбист отбирает и отдаёт", "acc": ["гэбист", "гэбн"], "n": "", "e": "geben, die Aufgabe, ergeben, die Ausgabe, angeben", "w": 5}, {"q": "nehm-", "a": "немой выхватывает", "acc": ["немой"], "n": "", "e": "nehmen, die Aufnahme, abnehmen, zunehmen, teilnehmen", "w": 5}, {"q": "kauf-", "a": "кофе покупают", "acc": ["кофе"], "n": "", "e": "kaufen, verkaufen, einkaufen, der Verkäufer", "w": 5}, {"q": "zahl-", "a": "цапля отсчитывает", "acc": ["цапл"], "n": "", "e": "zahlen, die Zahl, bezahlen, zählen, erzählen", "w": 4}, {"q": "kost-", "a": "кость, которая дорого стоит", "acc": ["кост"], "n": "", "e": "kosten, die Kosten, kostbar, kostenlos", "w": 3}, {"q": "wert-", "a": "верстак оценки", "acc": ["верстак"], "n": "", "e": "der Wert, wertvoll, bewerten", "w": 3}, {"q": "teil-", "a": "отколотая плитка", "acc": ["плитк"], "n": "", "e": "teilen, der Teil, die Abteilung, mitteilen, das Urteil", "w": 2}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Изменение и разрушение", "items": [{"q": "schlag-", "a": "шлагбаум бьёт", "acc": ["шлагбаум"], "n": "", "e": "schlagen, der Schlag, vorschlagen, der Vorschlag", "w": 4}, {"q": "brech-", "a": "брешь в стене", "acc": ["бреш"], "n": "", "e": "brechen, der Bruch, zerbrechen, unterbrechen, das Verbrechen", "w": 4}, {"q": "schneid-", "a": "шнековый нож", "acc": ["шнеков"], "n": "", "e": "schneiden, der Schnitt, abschneiden, der Abschnitt", "w": 3}, {"q": "reiß-", "a": "рис рассыпается", "acc": ["рис"], "n": "", "e": "reißen, der Riss, zerreißen, der Reißverschluss", "w": 3}, {"q": "schließ-", "a": "шлиц, запирающий паз", "acc": ["шлиц"], "n": "", "e": "schließen, der Schluss, beschließen, der Entschluss", "w": 4}, {"q": "öffn-", "a": "офис распахнут", "acc": ["офис"], "n": "", "e": "öffnen, offen, die Öffnung, veröffentlichen", "w": 3}, {"q": "bind-", "a": "бинт связывает", "acc": ["бинт"], "n": "", "e": "binden, der Verband, verbinden, die Verbindung", "w": 4}, {"q": "scheid-", "a": "шайба, разрубленная надвое", "acc": ["шайб"], "n": "", "e": "scheiden, entscheiden, die Entscheidung, der Unterschied", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Поиск и выбор", "items": [{"q": "such-", "a": "сучок, который ищут", "acc": ["сучок"], "n": "", "e": "suchen, versuchen, der Versuch, untersuchen, der Besuch", "w": 5}, {"q": "find-", "a": "финка, найденный нож", "acc": ["финк"], "n": "", "e": "finden, erfinden, die Erfindung, stattfinden", "w": 5}, {"q": "treff-", "a": "трефы, карта попадания", "acc": ["треф"], "n": "", "e": "treffen, das Treffen, betreffen, zutreffen", "w": 4}, {"q": "wähl-", "a": "валик, которым выбирают", "acc": ["валик"], "n": "", "e": "wählen, die Wahl, auswählen, die Auswahl", "w": 4}, {"q": "prüf-", "a": "пруф, доказательство", "acc": ["пруф"], "n": "", "e": "prüfen, die Prüfung, überprüfen", "w": 3}, {"q": "rechn-", "a": "речной счётчик", "acc": ["речн", "счётчик", "счетчик"], "n": "", "e": "rechnen, die Rechnung, berechnen, ausgerechnet", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Именные корни", "items": [{"q": "Haus", "a": "дом", "acc": ["дом"], "n": "", "e": "das Haus, die Hausaufgabe, der Haushalt, zu Hause", "w": 5}, {"q": "Land", "a": "земля, страна", "acc": ["земл", "стран"], "n": "", "e": "das Land, die Landschaft, landen, der Ausländer", "w": 5}, {"q": "Zeit", "a": "время", "acc": ["врем"], "n": "", "e": "die Zeit, die Zeitung, gleichzeitig, die Freizeit", "w": 5}, {"q": "Weg", "a": "путь, дорога", "acc": ["пут", "дорог"], "n": "", "e": "der Weg, wegen, bewegen, die Bewegung, der Ausweg", "w": 5}, {"q": "Hand", "a": "рука", "acc": ["рук"], "n": "", "e": "die Hand, handeln, die Handlung, behandeln, das Handtuch", "w": 5}, {"q": "Recht", "a": "право, прямота", "acc": ["прав"], "n": "", "e": "das Recht, richtig, richten, der Bericht, die Richtung", "w": 4}, {"q": "Kraft", "a": "сила", "acc": ["сил"], "n": "", "e": "die Kraft, kräftig, verstärken", "w": 4}, {"q": "Werk / Zeug", "a": "работа / орудие", "acc": ["работ", "оруди", "инструмент"], "n": "", "e": "das Werk, das Werkzeug, das Flugzeug, das Fahrzeug", "w": 4}, {"q": "Grund", "a": "основание, дно", "acc": ["основ", "дно"], "n": "", "e": "der Grund, gründen, gründlich, der Hintergrund", "w": 4}, {"q": "Sicht", "a": "вид, зрение", "acc": ["вид", "зрен"], "n": "", "e": "die Sicht, die Absicht, die Aussicht, sichtbar", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": false, "ask": "Значение", "askRev": ""}]}];
 
 /* ===== storage ===== */
 const SK="mrph_v2_";let OK_ST=true,MEM={};
@@ -397,7 +403,7 @@ const store={
  all(){const o={};if(!OK_ST)return {...MEM};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
   if(k&&k.indexOf(SK)===0)o[k.slice(SK.length)]=JSON.parse(localStorage.getItem(k))}}catch(e){}return o}
 };
-function warn(m){const b=document.getElementById("warnBar");b.textContent=m;b.classList.add("on")}
+function warn(m){const b=document.getElementById("warnBar");b.innerHTML=m+' <button onclick="this.parentNode.classList.remove(&quot;on&quot;);syncSideOffset()" style="float:right;background:none;border:none;color:inherit;cursor:pointer;font-size:1rem">✕</button>';b.classList.add("on");syncSideOffset()}
 let saved=store.get("saved",0);
 function touch(){saved=Date.now();store.set("saved",saved);drawSaved()}
 function drawSaved(){
@@ -437,7 +443,7 @@ const SRS={
   r.st=now;
   if(ok&&wasK===0)SES.intro++;
   if(was<1&&now>=1)SES.rec++;
-  if(was<2&&now>=2){r.b=1;r.d=this.t()+BOX[1];SES.grad++}
+  if(was<2&&now>=2){r.b=1;r.d=this.t();SES.grad++} /* due today so practice is immediately available */
   this.d[k]=r;this.save();return r;
  },
  answer(k,ok){
@@ -481,7 +487,7 @@ const T1=3,T2=10;   // порог узнавания и порог перехо�
 const S={sec:store.get("sec","all"),tab:store.get("view","learn"),
  dir:store.get("dir","two"),ord:store.get("ord","seq"),side:store.get("side","fwd"),
  batch:store.get("batch",20),
- lq:[],lc:null,lshown:false,pq:[],pc:null,pans:false,recent:[]};
+ lq:[],lc:null,lshown:false,pq:[],pc:null,pans:false,pforce:false,recent:[]};
 if(!NAV.some(x=>x.id===S.sec))S.sec="all";
 
 function items(sec){return sec==="all"?IDX:IDX.filter(r=>r.sec===sec)}
@@ -504,11 +510,7 @@ function popNext(q){
 }
 /* верный ответ — в конец круга, неверный — примерно на треть вперёд,
    но не ближе GAP карточек, чтобы не встретиться сразу */
-function reinsert(q,c,ok){
- if(ok){q.push(c);return}
- const pos=Math.max(GAP,Math.floor(q.length/3));
- q.splice(Math.min(q.length,pos),0,c);
-}
+function reinsert(q,c,ok){ q.push(c); }
 function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
 
 function byW(a,b){const d=(b.it.w||3)-(a.it.w||3);return d!==0?d:a.key.localeCompare(b.key)}
@@ -543,7 +545,17 @@ function buildPrac(){
 /* ===== fuzzy match (свободный ввод, без вариантов) ===== */
 const STOP=new Set(["и","в","на","с","со","из","за","по","от","до","у","о","об","к","то","что","как","же",
  "не","ни","а","но","или","это","его","её","ее","их","он","она","оно","они","вы","вас","вам","предмет","образ"]);
+/* nrm for free-text images: strip punctuation but keep letters, digits, spaces, hyphens, umlauts */
 function nrm(s){return (s||"").toLowerCase().replace(/ё/g,"е").replace(/[^0-9a-zа-яäöüß\s-]/gi," ").replace(/\s+/g," ").trim()}
+/* nrm for morphemes: keep ¨ ∅ / - and letters; only collapse whitespace */
+function nrmMorph(s){return (s||"").toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ").trim()}
+function morphShape(s){
+ s=nrmMorph(s);
+ return (s.startsWith("-")?"L":"")+(s.endsWith("-")?"R":"");
+}
+function morphParts(s){
+ return nrmMorph(s).split(/\s*\/\s*|\s+или\s+/).map(x=>x.trim()).filter(Boolean);
+}
 function stem(w){
  w=w.replace(/^-+|-+$/g,"");
  if(w.length<5)return w;
@@ -559,38 +571,100 @@ function lev(a,b){
  return d[n];
 }
 function toks(s){return nrm(s).split(" ").filter(w=>w.length>2&&!STOP.has(w)).map(stem)}
+/* set of all other morpheme strings (for near-check) — built once */
+const ALL_Q=new Set();
+IDX.forEach(r=>{
+ const raw=nrmMorph(r.it.q);
+ raw.split(/\s*\/\s*|\s*,\s*|\s+или\s+/).forEach(p=>{
+  const t=p.replace(/\s*\(.*\)\s*/g,"").trim();
+  if(t)ALL_Q.add(t);
+  const bare=t.replace(/^-+|-+$/g,"").trim();
+  if(bare&&bare!==t)ALL_Q.add(bare);
+ });
+});
 /* returns 0 нет · 1 близко · 2 верно */
 function grade(card,user){
- const u=nrm(user);if(!u)return 0;
- const ut=toks(user);
+ const rawUser=(user||"").trim();
+ if(!rawUser)return 0;
+ const u=nrm(rawUser);
+ const um=nrmMorph(rawUser);
+ const ut=toks(rawUser);
+
+ /* Cards with the same prompt can legitimately have several correct answers.
+    In reverse mode, accept every morpheme attached to the same image. */
+ const samePrompt=nrmMorph(card.it.a);
+const isGrammarAnswer=/^(?:der|die|das)\b.*(?:мн\.|склонение)/i.test(samePrompt);
+const peers=IDX.filter(r=>r.it===card.it || (!isGrammarAnswer&&nrmMorph(r.it.a)===samePrompt));
  if(card.side==="rev"){
-  const target=nrm(card.it.q),parts=target.split(/[\/,]| или /).map(x=>x.trim()).filter(Boolean);
-  for(const p of parts){
-   const bare=p.replace(/^-+|-+$/g,"").replace(/\s*\(.*\)\s*/g,"").trim();
-   if(!bare)continue;
-   const ub=u.replace(/^-+|-+$/g,"");
-   if(u===p||u===bare||ub===bare)return 2;
-   if(bare.length>=3&&lev(ub,bare)<=1)return 1;
+  const targets=[];
+  peers.forEach(r=>morphParts(r.it.q).forEach(p=>{if(!targets.includes(p))targets.push(p)}));
+  for(const p0 of targets){
+   const p=p0.replace(/\s*\(.*\)\s*/g,"").trim();
+   if(!p)continue;
+   const pNorm=nrmMorph(p), pCompact=pNorm.replace(/\s+/g,"");
+   const uCompact=um.replace(/\s+/g,"");
+   const umNorm=um.replace(/(\*\*|''|")/g,"¨");
+   const uNormCompact=umNorm.replace(/\s+/g,"");
+   if(um===pNorm||umNorm===pNorm||uCompact===pCompact||uNormCompact===pCompact)return 2;
+
+   /* Fuzzy matching must preserve morpheme position:
+      -er is not er-, and a bare word is not a prefix/suffix. */
+   const pBare=pNorm.replace(/^-+|-+$/g,"");
+   const uBare=umNorm.replace(/^-+|-+$/g,"");
+   if(morphShape(umNorm)!==morphShape(pNorm))continue;
+   if(pBare.length>=2&&lev(uBare,pBare)<=1){
+    if(ALL_Q.has(um)||ALL_Q.has(umNorm)||ALL_Q.has(uBare)||ALL_Q.has(uCompact)){
+     continue;
+    }
+    return 1;
+   }
   }
+  /* Human-readable aliases for symbols that are awkward to type. */
+  if(/∅|без\s*изменен|нулев|нуль|нет\s*измен|пусто/i.test(rawUser) &&
+     targets.some(t=>/∅|без\s*изменен/.test(t)))return 2;
+  if(/умлаут|¨|умляут|\*\*|''|"/i.test(rawUser) &&
+     targets.some(t=>/¨|умлаут/.test(t)))return 2;
   return 0;
  }
- // прямое направление: важен образ, не формулировка
- const acc=card.it.acc.map(nrm);
- for(const a of acc){ if(a&&u.indexOf(a)>=0)return 2; }
+
+ /* Forward mode: aggregate acceptable descriptions/keys for duplicate prompts. */
+ const peerItems=peers.map(r=>r.it);
+ const acc=[...new Set(peerItems.flatMap(it=>(it.acc||[]).map(nrm)).filter(a=>a&&a.length>=2))];
+
+ /* Composite grammar answers such as "die, мн. -en" must be entered as a whole. */
+ const hasPluralPattern=peerItems.some(it=>/,\s*мн\./i.test(it.a));
+for(const it of peerItems){
+  if(/,\s*мн\./i.test(it.a) && nrmMorph(rawUser)===nrmMorph(it.a))return 2;
+}
+if(hasPluralPattern)return 0;
+
+ for(const a of acc){
+  if(a.length>=4&&u.indexOf(a)>=0)return 2;
+  /* Short keys are exact tokens only; never use them as substrings. */
+  const re=new RegExp("(^|\\\\s)"+a.replace(/[.*+?^${}()|[\\\\]\\\\]/g,"\\\\$&")+"(?=\\\\s|$|-)","i");
+  if(re.test(u))return 2;
+ }
+ for(const a of acc.filter(a=>a.length>=4)){
+  const as=stem(a);
+  for(const w of ut){
+   if(w===as||(w.length>=4&&(w.indexOf(as)===0||as.indexOf(w)===0)))return 2;
+  }
+ }
+
+ /* Do not use Levenshtein as a one-word semantic match: it turns
+    "корова" into a false positive for "корона". */
+ const semantic=[...new Set(peerItems.flatMap(it=>toks(it.a)))];
+ if(semantic.length>1){
+  let hit=0;
+  semantic.forEach(t=>{if(ut.some(w=>w===t|| (t.length>=5&&w.length>=4&&lev(w,t)<=1)))hit++});
+  if(hit/semantic.length>=0.6)return 2;
+  if(hit>0&&hit/semantic.length>=0.3)return 1;
+ }
  for(const a of acc){
   const as=stem(a);
-  for(const w of ut){ if(w===as||w.indexOf(as)===0||as.indexOf(w)===0&&w.length>=4)return 2; }
- }
- // совпадение по смысловым словам эталона
- const at=toks(card.it.a);
- if(at.length){
-  let hit=0;at.forEach(t=>{if(ut.some(w=>w===t||lev(w,t)<=1))hit++});
-  if(hit/at.length>=0.5)return 2;
-  if(hit>0)return 1;
- }
- for(const a of acc){
-  const as=stem(a);
-  for(const w of ut){ if(as.length>=4&&lev(w,as)<=2)return 1; }
+  if(as.length>=4){
+   for(const w of ut){if(lev(w,as)<=1)return 1}
+  }
  }
  return 0;
 }
@@ -625,9 +699,15 @@ function share(ck){
  return 0.25*Math.min(k,T1)/T1;
 }
 function secPct(sec){
- const cs=cards(sec); if(!cs.length)return 0;
- let s=0; cs.forEach(c=>s+=share(c.ck));
- return Math.round(s/cs.length*100);
+ /* Progress is measured per morpheme, not per rendered card. */
+ const byKey=new Map();
+ cards(sec).forEach(c=>{
+  const v=share(c.ck),prev=byKey.get(c.key);
+  byKey.set(c.key,prev===undefined?v:Math.max(prev,v));
+ });
+ if(!byKey.size)return 0;
+ let s=0;byKey.forEach(v=>s+=v);
+ return Math.round(s/byKey.size*100);
 }
 function drawNav(){
  drawViews();
@@ -656,8 +736,9 @@ function syncOpt(){
 function opt(k,v){S[k]=v;store.set(k,v);syncOpt();refreshAll()}
 let POP=null;
 function pop(id,anchor){
- closePop();
  const el=document.getElementById("pop-"+id);if(!el)return;
+ if(POP===el){closePop();return} /* toggle (BUG-31) */
+ closePop();
  el.classList.add("on");document.getElementById("popBd").classList.add("on");POP=el;
  const lb=document.getElementById("linkBox");if(lb&&id==="store"){lb.style.display="none";linkStatus("",true)}
  if(window.innerWidth>900){
@@ -671,10 +752,13 @@ function closePop(){
  if(POP){POP.classList.remove("on");POP=null}
  document.getElementById("popBd").classList.remove("on");
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closePop()});
 function setSec(id){S.sec=id;store.set("sec",id);closePop();document.body.classList.remove("nav");refreshAll()}
 function view(t){
- if(t==="practice"&&!S.pq.length&&!S.pc)return;
+ if(t==="practice"&&!S.pq.length&&!S.pc){
+  /* give feedback instead of silent fail (BUG-21) */
+  if(S.tab!=="practice")alert("Практика пока пуста. Карточки появятся после обучения (или завтра, если только что выпущены).");
+  return;
+ }
  S.tab=t;store.set("view",t);closePop();
  document.body.classList.remove("nav");
  ["learn","practice","theory","stats"].forEach(k=>
@@ -704,8 +788,8 @@ function nextLearn(){
  if(!S.lq.length){
   S.lc=null;
   document.getElementById("lStage").textContent="";document.getElementById("lTag").textContent="";
-  document.getElementById("lQ").innerHTML='<span style="font-size:1.05rem;color:var(--tx3)">Обучение раздела пройдено. Дальше работает практика.</span>';
-   document.getElementById("lActs").innerHTML='<button class="btn" onclick="tab(\'practice\')">Перейти к практике</button>';
+  document.getElementById("lQ").innerHTML='<span style="font-size:1.05rem;color:var(--tx3)">Обучение раздела пройдено. Дальше работает практика (карточки доступны сразу).</span>';
+   document.getElementById("lActs").innerHTML='<button class="btn" onclick="buildPrac();view(\'practice\')">Перейти к практике</button>';
   card.className="qcard";updLearn();return;
  }
  S.lc=popNext(S.lq);markRecent(S.lc.ck);
@@ -730,7 +814,7 @@ function lShow(){
  const st=SRS.st(c.ck);
  const front=c.side==="fwd"?c.it.q:c.it.a, back=c.side==="fwd"?c.it.a:c.it.q;
  let h='<div class="rev"><div class="ans">'+esc(back)+'</div>';
- if(c.it.n)h+='<div class="nt">'+esc(c.it.n)+'</div>';
+ if(c.it.n&&c.it.n!==c.it.e)h+='<div class="nt">'+esc(c.it.n)+'</div>';
  if(c.it.e)h+='<div class="ex">'+esc(c.it.e)+'</div>';
  h+='</div>';
  document.getElementById("lRev").innerHTML=h;
@@ -740,7 +824,8 @@ function lShow(){
   +'<button class="btn no" onclick="lGrade(false)">Не знал</button>';
 }
 function lGrade(ok){
- const c=S.lc;if(!c)return;
+ const c=S.lc;if(!c||ANIM_LOCK)return;
+ ANIM_LOCK=true;
  const r=SRS.selfGrade(c.ck,ok);
  bump(c.sec,ok);
  const el=document.getElementById("lStage");
@@ -754,23 +839,27 @@ function lGrade(ok){
  document.getElementById("lActs").innerHTML="";
  if(r.st<2)reinsert(S.lq,c,ok);
  else S.lq=S.lq.filter(x=>x.ck!==c.ck);
- setTimeout(()=>{if(!S.lq.length)buildLearn();nextLearn();drawNav()},r.st>=2?620:460);
+ setTimeout(()=>{ANIM_LOCK=false;if(!S.lq.length)buildLearn();nextLearn();drawNav()},r.st>=2?620:460);
 }
-function lSkip(){ if(S.lc)reinsert(S.lq,S.lc,false); nextLearn(); }
+function lSkip(){ if(ANIM_LOCK)return; if(S.lc)reinsert(S.lq,S.lc,false); nextLearn(); }
 function buildLearnKeep(){/* очередь не пересобираем, чтобы не терять место */}
 function updLearn(){
  const cs=cards(S.sec);
  const n1=cs.filter(c=>SRS.st(c.ck)===1).length,
        n2=cs.filter(c=>SRS.st(c.ck)>=2).length;
  document.getElementById("lBar").style.width=secPct(S.sec)+"%";
- document.getElementById("lMeta").textContent="в практике "+n2+" из "+cs.length+" · узнавание "+n1+" · в круге "+S.lq.length;
+ document.getElementById("lMeta").textContent="в практике "+n2+" из "+cs.length+" · узнавание "+n1+" · в круге "+(S.lq.length+(S.lc?1:0));
 }
 
 /* ===== PRACTICE: свободный ввод ===== */
 function nextPrac(){
- document.getElementById("pVerdict").innerHTML="";S.pans=false;
+ document.getElementById("pVerdict").innerHTML="";S.pans=false;S.pforce=false;
  const card=document.getElementById("pCard");card.className="qcard s2";
  const inp=document.getElementById("ans");
+ /* restore button labels */
+ const btns=document.querySelectorAll("#p-practice .acts .btn");
+ if(btns[0])btns[0].textContent="Ответить";
+ if(btns[1])btns[1].textContent="Не помню";
  if(!S.pq.length){
   buildPrac();
   if(!S.pq.length){
@@ -783,12 +872,12 @@ function nextPrac(){
  document.getElementById("pTag").textContent="";
  document.getElementById("pAsk").textContent=c.side==="fwd"?c.ask:c.askRev;
  document.getElementById("pQ").textContent=c.side==="fwd"?c.it.q:c.it.a;
- document.getElementById("pDir").textContent=c.side==="fwd"?c.ask:c.askRev;
+ document.getElementById("pDir").textContent=""; /* avoid duplicate with pAsk (BUG-24) */
  inp.disabled=false;inp.value="";inp.placeholder=c.side==="fwd"?c.ask+" своими словами":c.askRev;
  inp.focus();card.style.animation="none";void card.offsetWidth;card.style.animation="";
  updPrac();drawBadges();
 }
-function pVerdict(g,c,user){
+function pVerdict(g,c,user,allowForce){
  const right=c.side==="fwd"?c.it.a:c.it.q;
  const cls=g===2?"ok":(g===1?"near":"no");
  let h='<div class="vd '+cls+'"><h4>'+(g===2?"Верно":(g===1?"Почти":"Мимо"))+'</h4>';
@@ -796,44 +885,63 @@ function pVerdict(g,c,user){
  else{
   if(user)h+='<div>Ваш ответ: '+esc(user)+'</div>';
   h+='<div>Эталон: <span class="cor">'+esc(right)+'</span></div>';
-  if(g===1)h+='<small>Ключевое слово угадано, но не точно — засчитано как верное.</small>';
+  if(g===1)h+='<small>Ответ близок, но не засчитан — нужен точный ответ.</small>';
  }
  if(c.it.n)h+='<small>'+esc(c.it.n)+'</small>';
  if(c.it.e)h+='<small style="font-style:italic">'+esc(c.it.e)+'</small>';
- if(g===0)h+='<div class="acts" style="margin-top:11px"><button class="btn sm" onclick="force()">Засчитать верным</button></div>';
+ if(g===0&&allowForce)h+='<div class="acts" style="margin-top:11px"><button class="btn sm" onclick="force()">Засчитать верным</button></div>';
  h+='</div>';
  document.getElementById("pVerdict").innerHTML=h;
  document.getElementById("pTag").textContent=(S.sec==="all"?c.secT+" · ":"")+c.grp;
  document.getElementById("pCard").className="qcard s2 "+(g?"good":"bad");
+}
+function reinsertPractice(c){
+ if(S.pq.length){S.pq.push(c);return}
+ const ck=c.ck,sec=c.sec;
+ setTimeout(()=>{
+  if(S.tab==="practice"&&S.sec===sec&&(!S.pc||S.pc.ck!==ck)){
+   S.pq.push(c);drawViews();updPrac();
+  }
+ },1200);
 }
 function send(){
  if(S.pans){nextPrac();return}
  const c=S.pc;if(!c)return;
  const v=document.getElementById("ans").value;
  if(!v.trim()){giveUp();return}
- const g=grade(c,v),ok=g>=1;
+ const g=grade(c,v),ok=g===2;
  if(g===1)SES.near++;
  const r=SRS.answer(c.ck,ok);bump(c.sec,ok);
- S.pans=true;pVerdict(g,c,v);
- if(!ok&&r.st<2){document.getElementById("pVerdict").insertAdjacentHTML("beforeend",
-  '<div class="tip" style="margin-top:10px">Три срыва подряд — карточка вернулась в обучение. Это сигнал переделать образ, а не повторять его снова.</div>')}
+ S.pans=true;S.pforce=(g===0);pVerdict(g,c,v,true);
+ if(!ok){
+  if(r.st<2){document.getElementById("pVerdict").insertAdjacentHTML("beforeend",
+   '<div class="tip" style="margin-top:10px">Три срыва подряд — карточка вернулась в обучение. Это сигнал переделать образ, а не повторять его снова.</div>')}
+  else reinsertPractice(c); /* never show a failed card immediately */
+ }
  const inp=document.getElementById("ans");inp.value="";inp.placeholder="Enter — дальше";
+ /* update button labels (BUG-25) */
+ document.querySelector("#p-practice .btn.pri").textContent="Дальше";
+ document.querySelector("#p-practice .btn:not(.pri)").textContent="Дальше";
  updPrac();drawNav();
 }
 function giveUp(){
  if(S.pans){nextPrac();return}
  const c=S.pc;if(!c)return;
  const r=SRS.answer(c.ck,false);bump(c.sec,false);
- S.pans=true;pVerdict(0,c,"");
+ S.pans=true;S.pforce=false;pVerdict(0,c,"",false);
  if(r.st<2)document.getElementById("pVerdict").insertAdjacentHTML("beforeend",
   '<div class="tip" style="margin-top:10px">Карточка вернулась в обучение.</div>');
+ else reinsertPractice(c);
  const inp=document.getElementById("ans");inp.value="";inp.placeholder="Enter — дальше";
+ document.querySelector("#p-practice .btn.pri").textContent="Дальше";
+ document.querySelector("#p-practice .btn:not(.pri)").textContent="Дальше";
  updPrac();drawNav();
 }
 function force(){
- const c=S.pc;if(!c)return;
+ const c=S.pc;if(!c||!S.pans||!S.pforce)return;
+ S.pforce=false;
  const p=SRS.r(c.ck)||{l:1};
- SRS.d[c.ck]={st:2,k:2,b:Math.max(1,p.b||1),l:Math.max(0,(p.l||1)-1),d:SRS.t()+BOX[1]};SRS.save();
+ SRS.d[c.ck]={st:2,k:2,b:Math.max(1,p.b||1),l:Math.max(0,(p.l||1)-1),d:SRS.t()};SRS.save();
  SES.ok++;SES.str++;SES.best=Math.max(SES.best,SES.str);
  const b=SES.by[c.sec];if(b)b.o++;drawStreak();
  pVerdict(2,c,"");updPrac();drawNav();
@@ -841,7 +949,7 @@ function force(){
 function updPrac(){
  const cs=cards(S.sec),done=cs.filter(c=>{const r=SRS.r(c.ck);return r&&r.b>=3}).length;
  document.getElementById("pBar").style.width=secPct(S.sec)+"%";
- document.getElementById("pMeta").textContent="выучено "+done+" из "+cs.length+" · в очереди "+S.pq.length;
+ document.getElementById("pMeta").textContent="выучено "+done+" из "+cs.length+" · в очереди "+(S.pq.length+(S.pc?1:0));
 }
 
 /* ===== theory ===== */
@@ -856,7 +964,7 @@ function drawTheory(){
    if(g.about)h+='<div class="tip" style="margin:0 0 12px">'+esc(g.about)+'</div>';
    h+='<table class="t t3"><tr><th>'+esc(c[0])+'</th><th>'+esc(c[1])+'</th><th>'+esc(c[2])+'</th></tr>';
    g.items.forEach(it=>{h+='<tr><td>'+esc(it.q)+'</td><td>'+esc(it.a)
-    +(it.n?'<span class="s">'+esc(it.n)+'</span>':'')+'</td><td class="ex3">'+esc(it.e||"—")+'</td></tr>'});
+    +(it.n&&it.n!==it.e?'<span class="s">'+esc(it.n)+'</span>':'')+'</td><td class="ex3">'+esc(it.e||"—")+'</td></tr>'});
    h+='</table></div>';
   });
  });
@@ -870,8 +978,8 @@ function stStats(sec){
  const boxes=new Array(BOX.length).fill(0);
  cs.forEach(c=>{const r=SRS.r(c.ck);
   if(!r){s0++;return}
-  started++;boxes[r.b]++;lap+=r.l||0;
-  if(r.st>=2){s2++;if(r.d<=t)due++}else if(r.st===1)s1++;else s0++;
+  started++;lap+=r.l||0;
+  if(r.st>=2){s2++;boxes[r.b]++;if(r.d<=t)due++}else if(r.st===1)s1++;else s0++;
   if(r.b>=3)learned++;});
  return {total:cs.length,started,learned,due,lap,boxes,s0,s1,s2};
 }
@@ -901,7 +1009,7 @@ function drawStats(){
    +'</td><td>'+q.learned+'</td><td>'+q.due+'</td><td'+(q.lap>15?' class="dg"':'')+'>'+q.lap+'</td></tr>'});
  h+='<tr style="font-weight:650"><td>Итого</td><td>'+T.total+'</td><td>'+T.s0+'</td><td>'+T.s1+'</td><td>'+T.s2
   +'</td><td>'+T.learned+'</td><td>'+T.due+'</td><td>'+T.lap+'</td></tr></table>'
-  +'<div class="tip">Столбцы «новых → узнавание → практика» показывают движение по ступеням. Карточка доходит до практики после двух самооценок «Знал» подряд.</div></div>';
+  +'<div class="tip">Столбцы «новых → узнавание → практика» показывают движение по ступеням. Карточка доходит до практики после '+T2+' самооценок «Знал» (счётчик уменьшается при «Не знал», но не обнуляется).</div></div>';
 
  const q=stStats(S.sec),mx=Math.max(1,...q.boxes);
  h+='<div class="blk"><h3>Расписание повторений — «'+esc(NAV.find(x=>x.id===S.sec).title)+'»</h3>';
@@ -940,6 +1048,9 @@ function fileLoad(inp){
   const o=JSON.parse(r.result);if(!o||o.app!=="morphemes-trainer"||!o.data)throw 0;
   const cur=Object.keys(store.get("srs",{})).length,inc=Object.keys(o.data.srs||{}).length;
   if(cur&&!confirm("Заменить текущий прогресс ("+cur+") копией из файла ("+inc+")?"))return;
+  /* full replace, not merge (BUG-17) */
+  if(OK_ST){try{const keys=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf(SK)===0)keys.push(k)}keys.forEach(k=>localStorage.removeItem(k))}catch(e){}}
+  else MEM={};
   Object.keys(o.data).forEach(k=>store.set(k,o.data[k]));reload();alert("Загружено: "+inc+" карточек.");
  }catch(e){alert("Не похоже на файл этого тренажёра.")}};
  r.readAsText(f);
@@ -947,6 +1058,7 @@ function fileLoad(inp){
 function reload(){
  SRS.d=store.get("srs",{});
  S.sec=store.get("sec",S.sec);S.dir=store.get("dir",S.dir);S.ord=store.get("ord",S.ord);S.side=store.get("side",S.side);
+ S.batch=store.get("batch",S.batch);S.tab=store.get("view",S.tab);
  if(!NAV.some(x=>x.id===S.sec))S.sec="all";
  saved=store.get("saved",Date.now());refreshAll();drawSaved();
 }
@@ -956,7 +1068,8 @@ function enc(){
  Object.keys(SRS.d).forEach(ck=>{
   const g=C2G[ck];if(g===undefined)return;
   const r=SRS.d[ck];if(!r)return;
-  if(!r.st&&!r.b&&!r.l)return;
+  /* keep any card that has progress (k, st, b or l). st=0 with k>0 must be saved */
+  if(!(r.k||r.st||r.b||r.l))return;
   let rel=(r.d||t)-t;rel=Math.max(-499,Math.min(795,rel));
   /* st 0..2 и k 0..10 в один знак: 2*11+10 = 32 < 36 */
   const sk=(Math.min(r.st||0,2)*11)+Math.min(r.k||0,10);
@@ -986,7 +1099,28 @@ function baseURL(){
  if(p==="http:"||p==="https:")return location.origin+location.pathname;
  return HOME;   // открыто из файла — ссылка всё равно ведёт на сайт
 }
-function progressURL(){return baseURL()+"#p="+enc()}
+function linkConfig(){
+ return {sec:S.sec,dir:S.dir,ord:S.ord,side:S.side,batch:S.batch,view:S.tab,theme:store.get("theme","dark")};
+}
+function progressURL(){
+ return baseURL()+"#p="+encodeURIComponent(enc())+"&cfg="+encodeURIComponent(JSON.stringify(linkConfig()));
+}
+function applyLinkConfig(cfg){
+ if(!cfg||typeof cfg!=="object")return;
+ if(NAV.some(x=>x.id===cfg.sec))S.sec=cfg.sec;
+ if(cfg.dir==="one"||cfg.dir==="two")S.dir=cfg.dir;
+ if(cfg.ord==="seq"||cfg.ord==="rnd")S.ord=cfg.ord;
+ if(cfg.side==="fwd"||cfg.side==="rev")S.side=cfg.side;
+ if([15,20,25].includes(Number(cfg.batch)))S.batch=Number(cfg.batch);
+ if(["learn","practice","theory","stats"].includes(cfg.view))S.tab=cfg.view;
+ if(cfg.theme==="light"||cfg.theme==="dark"){
+ document.documentElement.setAttribute("data-theme",cfg.theme);
+ const cs=document.querySelector('meta[name="color-scheme"]');
+ if(cs)cs.content=cfg.theme==="light"?"light dark":"dark light";
+}
+ ["sec","dir","ord","side","batch","view"].forEach(k=>store.set(k,S[k]));
+ if(cfg.theme==="light"||cfg.theme==="dark")store.set("theme",cfg.theme);
+}
 function linkStatus(s,ok){
  const el=document.getElementById("linkStatus");
  if(el){el.textContent=s;el.style.color=ok?"var(--ok)":"var(--warn)"}
@@ -1048,13 +1182,18 @@ const tgLink=shareLink;
 function hashImport(){
  const h=location.hash||"";
  if(h.indexOf("#p=")!==0)return false;
- let o;try{o=dec(decodeURIComponent(h.slice(3)))}catch(e){return false}
+ const body=h.slice(3),cut=body.indexOf("&cfg=");
+ const code=cut>=0?body.slice(0,cut):body;
+ const cfgRaw=cut>=0?body.slice(cut+5):"";
+ let o,cfg=null;
+ try{o=dec(decodeURIComponent(code));if(cfgRaw)cfg=JSON.parse(decodeURIComponent(cfgRaw))}catch(e){return false}
  const cur=Object.keys(SRS.d).length,inc=Object.keys(o).length;
- history.replaceState(null,"",location.pathname+location.search);
  const msg=cur?("Ссылка содержит прогресс: "+inc+" карточек.\nВ этом браузере уже есть "+cur+". Заменить?")
               :("Ссылка содержит прогресс: "+inc+" карточек. Загрузить?");
  if(!confirm(msg))return false;
- SRS.d=o;SRS.save();return true;
+ /* clear hash AFTER confirm so file:// does not throw before dialog */
+ try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+ SRS.d=o;SRS.save();applyLinkConfig(cfg);return true;
 }
 function tgImportOpen(){
  tab("stats");
@@ -1079,8 +1218,18 @@ function tgImport(){
 /* ===== misc ===== */
 function resetSec(){
  const t=NAV.find(x=>x.id===S.sec).title;
- if(!confirm("Сбросить прогресс раздела «"+t+"»?"))return;
+ const msg=S.sec==="all"
+  ?"Сбросить прогресс всех разделов? Это удалит весь сохранённый прогресс."
+  :"Сбросить прогресс раздела «"+t+"»?";
+ if(!confirm(msg))return;
  SRS.reset(S.sec);refreshAll();
+}
+function syncSideOffset(){
+ const hdr=document.querySelector(".hdr"),warnEl=document.getElementById("warnBar");
+ if(!hdr)return;
+ const h=hdr.getBoundingClientRect().height;
+ const w=warnEl&&warnEl.classList.contains("on")?warnEl.getBoundingClientRect().height:0;
+ document.documentElement.style.setProperty("--side-top",Math.ceil(h+w)+"px");
 }
 function nav(){
  if(window.innerWidth>900)document.body.classList.toggle("slim");
@@ -1089,18 +1238,26 @@ function nav(){
 function theme(){
  const c=document.documentElement.getAttribute("data-theme"),n=c==="dark"?"light":"dark";
  document.documentElement.setAttribute("data-theme",n);store.set("theme",n);
+ try{var cs=document.querySelector('meta[name="color-scheme"]');if(cs)cs.content=n==="light"?"light dark":"dark light"}catch(e){}
 }
+/* single keydown handler — prevents Escape from both closing pop and skipping a card */
+let ANIM_LOCK=false; /* blocks input during grade animation (BUG-10) */
 document.addEventListener("keydown",e=>{
  const inField=e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA";
- if(e.key==="Escape"){if(POP){closePop();e.preventDefault();return}
-  if(!inField&&S.tab==="learn"&&S.lc){lSkip();e.preventDefault();return}}
+ if(e.key==="Escape"){
+  if(POP){closePop();e.preventDefault();return}
+  if(!inField&&S.tab==="learn"&&S.lc&&!ANIM_LOCK){lSkip();e.preventDefault();return}
+  return;
+ }
+ if(e.ctrlKey||e.metaKey||e.altKey)return; /* BUG-19: ignore when modifiers are held */
  if(inField){
   if(e.key==="ArrowRight"&&S.tab==="practice"&&S.pans){e.preventDefault();nextPrac()}
   return;
  }
  const m={"1":"learn","2":"practice","3":"theory","4":"stats"};
  if(m[e.key]){e.preventDefault();view(m[e.key]);return}
- if(e.key==="\\"||e.key==="b"||e.key==="и"){e.preventDefault();nav();return}
+ if(e.key==="\\"||e.key==="b"||e.key==="и"||e.key==="B"){e.preventDefault();nav();return}
+ if(ANIM_LOCK)return;
  if(S.tab==="learn"&&S.lc){
   if(e.key===" "||e.key==="Enter"){e.preventDefault();
    if(!S.lshown)lShow();
@@ -1118,14 +1275,31 @@ document.addEventListener("keydown",e=>{
  }
 });
 
+/* theme already applied in <head>; re-sync in case store differs */
 document.documentElement.setAttribute("data-theme",store.get("theme","dark"));
+try{var cs=document.querySelector('meta[name="color-scheme"]');if(cs)cs.content=store.get("theme","dark")==="light"?"light dark":"dark light"}catch(e){}
 try{hashImport()}catch(e){}
 (function(){const b=document.getElementById("shareBtn");
  if(b&&!navigator.share)b.textContent="Открыть Telegram";})();
 refreshAll();drawSaved();drawStreak();
 if(!OK_ST)warn("Прогресс не сохранится: браузер блокирует хранилище (инкогнито или запрет данных сайта).");
 window.addEventListener("pagehide",()=>{try{SRS.save()}catch(e){}});
-setInterval(()=>{if(S.tab==="stats")drawStats()},30000);
+setInterval(()=>{if(S.tab==="stats"&&!document.getElementById("tgi"))drawStats()},30000);
+window.addEventListener("resize",()=>{
+ if(window.innerWidth<=900){
+  document.body.classList.remove("slim");
+ }else{
+  document.body.classList.remove("nav");
+ }
+ syncSideOffset();
+});
+if(window.ResizeObserver){
+ const ro=new ResizeObserver(syncSideOffset);
+ const hdr=document.querySelector(".hdr"),warnEl=document.getElementById("warnBar");
+ if(hdr)ro.observe(hdr);
+ if(warnEl)ro.observe(warnEl);
+}
+syncSideOffset();
 </script>
 </body>
 </html>
