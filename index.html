@@ -547,8 +547,18 @@ const STOP=new Set(["и","в","на","с","со","из","за","по","от","д
  "не","ни","а","но","или","это","его","её","ее","их","он","она","оно","они","вы","вас","вам","предмет","образ"]);
 /* nrm for free-text images: strip punctuation but keep letters, digits, spaces, hyphens, umlauts */
 function nrm(s){return (s||"").toLowerCase().replace(/ё/g,"е").replace(/[^0-9a-zа-яäöüß\s-]/gi," ").replace(/\s+/g," ").trim()}
-/* nrm for morphemes: keep ¨ ∅ / - and letters; only collapse whitespace */
-function nrmMorph(s){return (s||"").toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ").trim()}
+/* nrm for morphemes: keep ¨ ∅ / - and letters; drop periods (optional to type) and collapse whitespace */
+function nrmMorph(s){return (s||"").toLowerCase().replace(/ё/g,"е").replace(/\./g,"").replace(/\s+/g," ").trim()}
+/* typable stand-ins for symbols that don't exist on a regular keyboard:
+   ¨ (umlaut mark) and ∅ (empty set / "no ending") — used for whole-answer grammar checks */
+function canonSpecial(s){
+ let t=nrmMorph(s);
+ t=t.replace(/умлаут|умляут|\*\*|''|"/gi,"¨");
+ t=t.replace(/без\s*изменен[а-я]*|нулев[а-я]*|нуль|нет\s*измен[а-я]*|пусто/gi,"∅");
+ t=t.replace(/-\s*$/,"∅");
+ t=t.replace(/(^|\s)0(\s|$)/g,"$1∅$2");
+ return t.replace(/\s+/g," ").trim();
+}
 function morphShape(s){
  s=nrmMorph(s);
  return (s.startsWith("-")?"L":"")+(s.endsWith("-")?"R":"");
@@ -631,10 +641,11 @@ const peers=IDX.filter(r=>r.it===card.it || (!isGrammarAnswer&&nrmMorph(r.it.a)=
  const peerItems=peers.map(r=>r.it);
  const acc=[...new Set(peerItems.flatMap(it=>(it.acc||[]).map(nrm)).filter(a=>a&&a.length>=2))];
 
- /* Composite grammar answers such as "die, мн. -en" must be entered as a whole. */
- const hasPluralPattern=peerItems.some(it=>/,\s*мн\./i.test(it.a));
+ /* Composite grammar answers such as "die, мн. -en" must be entered as a whole
+    (period optional, case-insensitive; ¨/∅ can be typed as **, '', 0, - etc). */
+ const hasPluralPattern=peerItems.some(it=>/,\s*мн\.?/i.test(it.a));
 for(const it of peerItems){
-  if(/,\s*мн\./i.test(it.a) && nrmMorph(rawUser)===nrmMorph(it.a))return 2;
+  if(/,\s*мн\.?/i.test(it.a) && canonSpecial(rawUser)===canonSpecial(it.a))return 2;
 }
 if(hasPluralPattern)return 0;
 
