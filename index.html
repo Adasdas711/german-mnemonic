@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="color-scheme" content="dark light">
+<title>Морфемы</title>
+<script>
+/* apply theme before paint to avoid flash (BUG-28) */
+(function(){try{var t=localStorage.getItem("mrph_v2_theme");if(t)t=JSON.parse(t);document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark");document.querySelector('meta[name="color-scheme"]').content=t==="light"?"light dark":"dark light"}catch(e){document.documentElement.setAttribute("data-theme","dark")}})();
+</script>
+<style>
+:root{
+ --bg:#101310; --panel:#161a16; --card:#1c211c; --card2:#232a23; --line:#2c352c; --line2:#42503f;
+ --tx:#e4ece2; --tx2:#b3c2ae; --tx3:#7d8c79;
+ --ac:#6fbf73; --ac2:#4e9a54; --ok:#7fd184; --bad:#8f9a8c; --warn:#b8c46a; --vio:#9ab98f;
+ --okbg:#1a2a1b; --okln:#33552f; --badbg:#20241f; --badln:#48513f;
+ --sh:0 6px 24px rgba(0,0,0,.4); --r:14px;
+}
+[data-theme="light"]{
+ --bg:#eef1ec; --panel:#f7f9f6; --card:#fff; --card2:#eef2ec; --line:#dde3da; --line2:#b9c5b4;
+ --tx:#1a1f19; --tx2:#41503d; --tx3:#74836f;
+ --ac:#2f7d3a; --ac2:#1f5c29; --ok:#2f7d3a; --bad:#5c665a; --warn:#6f7a2e; --vio:#4e6b47;
+ --okbg:#e5f1e4; --okln:#a8cca3; --badbg:#eceeeb; --badln:#c2c9bf;
+ --sh:0 6px 20px rgba(30,45,25,.09);
+}
+:root{--side-top:104px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+ background:var(--bg);color:var(--tx);line-height:1.5;min-height:100dvh;font-size:15px}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+button,input,textarea{font-family:inherit}
+
+@keyframes cIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes rIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes dIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}60%{transform:scale(1.02)}to{opacity:1;transform:scale(1)}}
+@keyframes shk{10%,90%{transform:translateX(-3px)}30%,70%{transform:translateX(4px)}50%{transform:translateX(-5px)}}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(111,191,115,.42)}100%{box-shadow:0 0 0 16px rgba(111,191,115,0)}}
+@keyframes grow{from{transform:scaleY(.15);opacity:.3}to{transform:scaleY(1);opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes bump{0%{transform:scale(1)}32%{transform:scale(1.28)}100%{transform:scale(1)}}
+@keyframes nudge{0%{transform:translateX(0)}30%{transform:translateX(-4px)}60%{transform:translateX(3px)}100%{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- HEADER ---------- */
+.hdr{position:sticky;top:0;z-index:45;background:var(--panel);border-bottom:1px solid var(--line);
+ padding-top:env(safe-area-inset-top)}
+.hdr-top{display:flex;align-items:center;gap:9px;padding:11px 18px;flex-wrap:wrap}
+.burger{display:none;width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--line);
+ color:var(--tx2);font-size:1rem;cursor:pointer}
+.logo{display:flex;align-items:baseline;gap:9px;margin-right:auto;min-width:0}
+.logo b{font-size:1.05rem;font-weight:650;letter-spacing:-.01em}
+.logo span{font-size:.78rem;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:20px;background:var(--card);
+ border:1px solid var(--line);font-size:.76rem;color:var(--tx3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip b{color:var(--tx2);font-weight:600}
+.chip.hot{border-color:var(--warn);color:var(--warn)}
+.chip.hot b{color:var(--warn)}
+.ibtn{width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--line);
+ color:var(--tx2);font-size:.95rem;cursor:pointer;transition:.15s}
+.ibtn:hover{border-color:var(--line2);color:var(--tx)}
+.ibtn:active{transform:scale(.93)}
+.hdr-tabs{display:flex;gap:2px;padding:0 20px 10px}
+.htab{flex:0 1 auto;padding:8px 16px;border-radius:9px;background:transparent;border:1px solid transparent;
+ color:var(--tx3);font-size:.86rem;cursor:pointer;transition:.15s;position:relative}
+.htab:hover{color:var(--tx2)}
+.htab.on{background:var(--card);border-color:var(--line);color:var(--tx);font-weight:550}
+.htab .badge{display:inline-block;margin-left:7px;min-width:19px;padding:1px 5px;border-radius:9px;
+ background:var(--ac);color:#0b1a0c;font-size:.68rem;font-weight:700;vertical-align:1px}
+[data-theme="light"] .htab .badge{color:#fff}
+.htab.on .badge{background:var(--ac)}
+
+.warn{display:none;padding:10px 20px;background:var(--badbg);border-bottom:1px solid var(--badln);
+ font-size:.82rem;animation:dIn .25s}
+.warn.on{display:block}
+
+/* ---------- LAYOUT ---------- */
+.shell{display:flex;max-width:1400px;margin:0 auto;align-items:flex-start}
+.side{width:262px;flex:0 0 262px;padding:18px 14px 40px;position:sticky;top:var(--side-top);transition:width .2s cubic-bezier(.2,.7,.3,1),flex-basis .2s,padding .2s,opacity .15s;
+ max-height:calc(100dvh - var(--side-top));overflow-y:auto;border-right:1px solid var(--line)}
+.slab{font-size:.7rem;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;margin:0 6px 9px;font-weight:600}
+.snav{list-style:none;display:flex;flex-direction:column;gap:4px;margin-bottom:20px}
+.sbtn{width:100%;text-align:left;padding:10px 11px;border-radius:10px;background:transparent;
+ border:1px solid transparent;color:var(--tx3);cursor:pointer;transition:.15s}
+.sbtn:hover{background:var(--card);color:var(--tx2)}
+.sbtn.on{background:var(--card);border-color:var(--line2);color:var(--tx)}
+.sbtn-row{display:flex;align-items:baseline;gap:8px;font-size:.87rem}
+.sbtn-row b{font-weight:550}
+.sbtn-n{margin-left:auto;font-size:.72rem;color:var(--tx3);font-variant-numeric:tabular-nums}
+.sbar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
+.sbar i{display:block;height:100%;background:var(--ac);width:0;transition:width .4s cubic-bezier(.2,.7,.3,1)}
+.sdiv{height:1px;background:var(--line);margin:6px 6px 16px}
+.olab{font-size:.74rem;color:var(--tx3);margin:12px 6px 7px}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:7px 5px;border-radius:7px;background:transparent;border:none;color:var(--tx3);
+ font-size:.77rem;cursor:pointer;transition:.15s}
+.seg button.on{background:var(--card2);color:var(--tx);font-weight:550;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.ohint{font-size:.71rem;color:var(--tx3);margin:6px 6px 0;line-height:1.4}
+#sideWrap{animation:dIn .2s}
+.mini{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.mini button{flex:1 1 46%;padding:8px 6px;border-radius:9px;background:var(--card);border:1px solid var(--line);
+ color:var(--tx2);font-size:.76rem;cursor:pointer;transition:.15s}
+.mini button:hover{border-color:var(--line2);color:var(--tx)}
+.mini .tg{background:var(--ac);border-color:var(--ac);color:#0b1a0c;font-weight:600}
+[data-theme="light"] .mini .tg{color:#fff}
+.saved{font-size:.71rem;color:var(--tx3);margin:0 6px;line-height:1.45}
+.saved b{color:var(--ok);font-weight:600}
+
+.main{flex:1 1 auto;min-width:0;padding:24px 26px 70px;padding-bottom:max(70px,env(safe-area-inset-bottom))}
+.wrap{max-width:700px;margin:0 auto}
+.pane{display:none}.pane.on{display:block;animation:fade .22s}
+
+/* ---------- PROGRESS ---------- */
+.pline{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.ptrack{flex:1;height:6px;border-radius:3px;background:var(--card2);overflow:hidden}
+.ptrack i{display:block;height:100%;background:linear-gradient(90deg,var(--ac2),var(--ac));width:0;
+ transition:width .45s cubic-bezier(.2,.7,.3,1)}
+.pmeta{font-size:.75rem;color:var(--tx3);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ---------- CARD ---------- */
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:30px 26px;
+ box-shadow:var(--sh);margin-bottom:16px;animation:cIn .3s cubic-bezier(.2,.7,.3,1);
+ border-left:3px solid var(--line2)}
+.qcard.s0{border-left-color:var(--line2)}
+.qcard.s1{border-left-color:var(--ac2)}
+.qcard.s2{border-left-color:var(--ac)}
+.qcard.good{animation:cIn .3s cubic-bezier(.2,.7,.3,1),glow .55s ease .08s}
+.qcard.bad{animation:shk .32s}
+.qmeta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+.tagp{font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);
+ padding:3px 9px;border-radius:6px;background:var(--card2)}
+.tagp.ask{background:transparent;border:1px solid var(--line2);color:var(--tx2);letter-spacing:.02em;text-transform:none;font-size:.72rem}
+.tagp.st{color:var(--tx3)}.tagp.st1{color:var(--ac2)}.tagp.st2{color:var(--ac)}
+.tagp{transition:background .25s,color .25s;display:inline-block}
+.tagp:empty{display:none}
+.tagp.bump-ok{animation:bump .36s cubic-bezier(.2,.7,.3,1);background:var(--okbg);color:var(--ok)}
+.tagp.bump-no{animation:nudge .34s ease;background:var(--badbg);color:var(--bad)}
+.tagp.grad{animation:bump .42s cubic-bezier(.2,.7,.3,1);background:var(--ac);color:#0b1a0c;font-weight:650}
+[data-theme="light"] .tagp.grad{color:#fff}
+.qmain{font-size:2rem;font-weight:650;line-height:1.2;letter-spacing:-.015em;word-break:break-word}
+.qsub{font-size:.78rem;color:var(--tx3);margin-top:8px}
+.rev{margin-top:20px;padding-top:18px;border-top:1px dashed var(--line);animation:rIn .32s cubic-bezier(.2,.7,.3,1)}
+.rev .ans{font-size:1.3rem;color:var(--ac);font-weight:550;line-height:1.35}
+.rev .nt{font-size:.85rem;color:var(--tx2);margin-top:11px;line-height:1.55}
+.rev .ex{font-size:.82rem;color:var(--tx3);margin-top:7px;font-style:italic}
+
+.acts{display:flex;gap:9px;flex-wrap:wrap}
+.btn{flex:1 1 120px;padding:13px 16px;min-height:48px;border-radius:11px;background:var(--card);
+ border:1px solid var(--line);color:var(--tx2);font-size:.92rem;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--line2);color:var(--tx)}
+.btn:active{transform:scale(.98)}
+.btn.pri{background:var(--ac);border-color:var(--ac);color:#0b1a0c;font-weight:600}
+[data-theme="light"] .btn.pri{color:#fff}
+.btn.yes{border-color:var(--okln);color:var(--ok)}
+.btn.no{border-color:var(--badln);color:var(--bad)}
+.btn.sm{flex:0 1 auto;padding:9px 14px;min-height:40px;font-size:.82rem}
+.ansin{width:100%;padding:14px 16px;min-height:52px;border-radius:11px;background:var(--card2);
+ border:1px solid var(--line);color:var(--tx);font-size:1rem;margin-bottom:10px;transition:.15s}
+.ansin:focus{border-color:var(--ac);outline:none}
+
+.vd{border-radius:12px;padding:15px 17px;margin-bottom:16px;font-size:.9rem;line-height:1.55;animation:dIn .26s}
+.vd.ok{background:var(--okbg);border:1px solid var(--okln)}
+.vd.no{background:var(--badbg);border:1px solid var(--badln)}
+.vd.near{background:var(--card2);border:1px solid var(--warn)}
+.vd h4{font-size:.95rem;margin-bottom:7px;font-weight:650}
+.vd .cor{color:var(--ok);font-weight:600}
+.vd small{display:block;color:var(--tx3);font-size:.82rem;margin-top:7px}
+.tip{font-size:.79rem;color:var(--tx3);margin-top:16px;line-height:1.55}
+
+/* ---------- TABLES / STATS ---------- */
+.blk{margin-bottom:30px;animation:fade .3s}
+.blk h3{font-size:.95rem;font-weight:650;color:var(--tx2);margin-bottom:12px;padding-bottom:8px;
+ border-bottom:1px solid var(--line)}
+.blk h2{font-size:1.15rem;font-weight:650;margin:26px 0 12px}
+table.t{width:100%;border-collapse:collapse;font-size:.85rem}
+table.t td,table.t th{padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+table.t th{font-size:.71rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+table.t td:first-child{font-weight:600;width:34%}
+table.t3 td:first-child{width:22%}
+table.t3 td:nth-child(2){width:44%}
+table.t3 .ex3{color:var(--tx3);font-size:.8rem;font-style:italic}
+table.kb{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:4px}
+table.kb td{padding:5px 0;color:var(--tx3);vertical-align:top}
+table.kb td:first-child{width:42%;color:var(--tx2);font-weight:600;font-variant-numeric:tabular-nums}
+@media(max-width:700px){table.t3 td,table.t3 th{padding:7px 6px;font-size:.79rem}
+ table.t3 td:first-child{width:26%}table.t3 td:nth-child(2){width:40%}}
+table.t .s{display:block;color:var(--tx3);font-size:.77rem;margin-top:3px;font-style:italic}
+table.t.n td:not(:first-child),table.t.n th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:11px;margin-bottom:20px}
+.mc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px;animation:pop .3s}
+.mc b{display:block;font-size:1.55rem;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mc span{display:block;font-size:.74rem;color:var(--tx3);margin-top:4px}
+.mc b.g{color:var(--ok)}.mc b.r{color:var(--bad)}.mc b.v{color:var(--vio)}.mc b.a{color:var(--ac)}
+.bars{display:flex;gap:5px;align-items:flex-end;height:78px;margin:16px 0 8px}
+.bar{flex:1;background:var(--card2);border-radius:4px 4px 0 0;min-height:4px;position:relative;
+ transform-origin:bottom;animation:grow .45s cubic-bezier(.2,.7,.3,1)}
+.bar.l{background:var(--ac);opacity:.8}
+.bar span{position:absolute;bottom:-19px;left:0;right:0;text-align:center;font-size:.67rem;color:var(--tx3)}
+.dg{color:var(--bad)}
+textarea.code{width:100%;min-height:96px;border-radius:11px;background:var(--card2);border:1px solid var(--line);
+ color:var(--tx);font-family:ui-monospace,Menlo,monospace;font-size:.74rem;padding:11px;word-break:break-all;resize:vertical}
+
+.bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;animation:fade .2s}
+/* popovers */
+.pop{display:none;position:fixed;z-index:70;background:var(--panel);border:1px solid var(--line2);
+ border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.4);padding:18px;width:330px;max-height:78dvh;overflow-y:auto;
+ animation:dIn .2s cubic-bezier(.2,.7,.3,1)}
+.pop.on{display:block}
+.pop h4{font-size:.95rem;font-weight:650;margin-bottom:12px;display:flex;align-items:center}
+.pop h4 button{margin-left:auto;background:none;border:none;color:var(--tx3);font-size:1rem;cursor:pointer}
+.popbd{display:none;position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.35)}
+.popbd.on{display:block;animation:fade .18s}
+@media(max-width:900px){
+ .pop{left:0!important;right:0!important;top:auto!important;bottom:0;width:auto;border-radius:18px 18px 0 0;
+  padding-bottom:max(18px,env(safe-area-inset-bottom))}
+}
+/* collapse */
+body.slim .side{width:0;flex-basis:0;padding-left:0;padding-right:0;overflow:hidden;border-right:none;opacity:0}
+.sec-list{list-style:none;display:flex;flex-direction:column;gap:4px}
+.only-nar{display:none}
+@media(max-width:900px){.only-wide{display:none!important}.only-nar{display:block}}
+/* stats redesign */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:20px}
+@media(max-width:640px){.cards{grid-template-columns:repeat(2,1fr)}}
+.boxrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.boxrow:last-child{border-bottom:none}
+.boxrow .bn{width:26px;height:26px;border-radius:8px;background:var(--card2);display:flex;align-items:center;
+ justify-content:center;font-size:.76rem;color:var(--tx3);font-weight:600;flex:0 0 26px}
+.boxrow.l .bn{background:var(--ac);color:#0b1a0c}
+[data-theme="light"] .boxrow.l .bn{color:#fff}
+.boxrow .bi{flex:1;min-width:0}
+.boxrow .bt{font-size:.82rem;color:var(--tx2)}
+.boxrow .bs{height:5px;border-radius:3px;background:var(--card2);margin-top:5px;overflow:hidden}
+.boxrow .bs i{display:block;height:100%;background:var(--line2);transition:width .4s}
+.boxrow.l .bs i{background:var(--ac)}
+.boxrow .bc{font-size:.82rem;color:var(--tx2);font-variant-numeric:tabular-nums;min-width:32px;text-align:right}
+@media(max-width:900px){
+ .burger{display:block}
+ .side{position:fixed;left:0;top:0;bottom:0;width:280px;flex-basis:280px;z-index:60;background:var(--panel);
+  max-height:100dvh;transform:translateX(-102%);transition:transform .24s cubic-bezier(.2,.7,.3,1);padding-top:22px}
+ body.nav .side{transform:none}
+ body.nav .bd{display:block}
+ .main{padding:18px 15px 60px}
+ .hdr-tabs{overflow-x:auto;padding:0 15px 10px;-webkit-overflow-scrolling:touch}
+ .htab{white-space:nowrap;flex:0 0 auto}
+ .hdr-top{padding:10px 15px}
+ .logo span{display:none}
+ .qmain{font-size:1.6rem}
+ .qcard{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+ <div class="hdr-top">
+  <button class="ibtn" onclick="nav()" title="Панель" aria-label="Открыть панель">☰</button>
+  <div class="logo"><b>Морфемы</b><span id="hdSub"></span></div>
+  <button class="htab" onclick="pop('secs',this)">Разделы ▾</button>
+  <button class="htab only-wide" onclick="pop('mode',this)">Режим ▾</button>
+  <button class="htab only-wide" onclick="pop('store',this)">Прогресс ▾</button>
+  <button class="htab" id="tb-stats" onclick="view('stats')">Статистика</button>
+  <div class="chip" id="chStreak">серия <b>0</b></div>
+  <button class="ibtn" onclick="theme()" title="Сменить тему" aria-label="Сменить тему">◐</button>
+ </div>
+</header>
+
+<div class="warn" id="warnBar"></div>
+<div class="bd" onclick="nav()"></div>
+
+<div class="shell">
+<aside class="side" id="side">
+ <div class="slab">Занятие</div>
+ <ul class="sec-list" id="viewNav"></ul>
+
+ <div class="only-nar">
+  <div class="sdiv" style="margin-top:18px"></div>
+  <div class="slab">Настройки</div>
+  <ul class="sec-list">
+   <li><button class="sbtn" onclick="pop('mode',null)"><span class="sbtn-row"><b>Режим</b><span class="sbtn-n" id="modeNow"></span></span></button></li>
+   <li><button class="sbtn" onclick="pop('store',null)"><span class="sbtn-row"><b>Сохранить прогресс</b></span></button></li>
+  </ul>
+ </div>
+
+ <div class="sdiv" style="margin-top:18px"></div>
+ <div class="saved" id="saveLine"></div>
+</aside>
+
+<div class="popbd" id="popBd" onclick="closePop()"></div>
+
+<div class="pop" id="pop-secs">
+ <h4>Разделы<button onclick="closePop()">✕</button></h4>
+ <ul class="sec-list" id="snav"></ul>
+</div>
+
+<div class="pop" id="pop-mode">
+ <h4>Режим<button onclick="closePop()">✕</button></h4>
+ <div class="olab">Направленность</div>
+ <div class="seg" id="segDir">
+  <button data-v="one" onclick="opt('dir','one')">Одно</button>
+  <button data-v="two" onclick="opt('dir','two')">Двусторонне</button>
+ </div>
+ <div class="ohint" id="hDir"></div>
+ <div id="sideWrap">
+  <div class="olab">Что спрашивать</div>
+  <div class="seg" id="segSide">
+   <button data-v="fwd" onclick="opt('side','fwd')">Морфема → образ</button>
+   <button data-v="rev" onclick="opt('side','rev')">Образ → морфема</button>
+  </div>
+ </div>
+ <div class="olab">Порядок внутри круга</div>
+ <div class="seg" id="segOrd">
+  <button data-v="seq" onclick="opt('ord','seq')">По важности</button>
+  <button data-v="rnd" onclick="opt('ord','rnd')">Вперемешку</button>
+ </div>
+ <div class="olab">Размер круга</div>
+ <div class="seg" id="segBatch">
+  <button data-v="15" onclick="opt('batch',15)">15</button>
+  <button data-v="20" onclick="opt('batch',20)">20</button>
+  <button data-v="25" onclick="opt('batch',25)">25</button>
+ </div>
+ <div class="ohint">Круг ограничивает, сколько морфем в работе одновременно: столько же новых и столько же на узнавании. Новые не подключаются, пока текущие не уйдут в практику.</div>
+ <div class="sdiv" style="margin:16px 0 12px"></div>
+ <div class="olab">Клавиши</div>
+ <table class="kb"><tr><td>Пробел · Enter</td><td>показать ответ, затем «Знал»</td></tr>
+ <tr><td>→ ↑</td><td>Знал</td></tr><tr><td>← ↓</td><td>Не знал</td></tr>
+ <tr><td>Esc</td><td>пропустить карточку</td></tr>
+ <tr><td>1 2 3 4 5</td><td>обучение · практика · повторение · теория · статистика</td></tr>
+ <tr><td>B или \</td><td>свернуть панель</td></tr></table>
+ <div class="sdiv" style="margin:16px 0 12px"></div>
+ <div class="mini"><button style="flex:1 1 100%" onclick="resetSec()">Сбросить раздел</button></div>
+</div>
+
+<div class="pop" id="pop-store">
+ <h4>Сохранить прогресс<button onclick="closePop()">✕</button></h4>
+ <div class="saved" id="saveLine2" style="margin-bottom:12px"></div>
+ <div class="mini">
+  <button onclick="fileSave()">Файл ↓</button>
+  <button onclick="document.getElementById('rf').click()">Файл ↑</button>
+ </div>
+ <div class="olab" style="margin-top:16px">Через ссылку</div>
+ <div class="mini">
+  <button class="tg" style="flex:1 1 100%" onclick="copyLink()">Скопировать ссылку</button>
+  <button style="flex:1 1 100%" id="shareBtn" onclick="shareLink()">Поделиться</button>
+ </div>
+ <div id="linkBox" style="display:none;margin-top:10px">
+  <textarea class="code" id="linkField" readonly onclick="this.select()" style="min-height:64px"></textarea>
+  <div class="mini" style="margin-top:6px"><button style="flex:1 1 100%" onclick="copyField()">Скопировать ссылку</button></div>
+  <div class="ohint" id="linkStatus"></div>
+ </div>
+ <div class="mini" style="margin-top:10px">
+  <button style="flex:1 1 100%" onclick="tgImportOpen()">Вставить код вручную</button>
+ </div>
+ <input type="file" id="rf" accept=".json" style="display:none" onchange="fileLoad(this)">
+</div>
+
+<main class="main"><div class="wrap">
+
+ <div class="pane on" id="p-learn">
+  <div class="pline"><div class="ptrack"><i id="lBar"></i></div><div class="pmeta" id="lMeta"></div></div>
+  <div class="qcard" id="lCard">
+   <div class="qmeta"><span class="tagp" id="lStage"></span><span class="tagp ask" id="lAsk"></span><span class="tagp" id="lTag"></span></div>
+   <div class="qmain" id="lQ"></div>
+   <div id="lRev"></div>
+  </div>
+  <div class="acts" id="lActs"></div>
+ </div>
+
+ <div class="pane" id="p-practice">
+  <div class="pline"><div class="ptrack"><i id="pBar"></i></div><div class="pmeta" id="pMeta"></div></div>
+  <div id="pVerdict"></div>
+  <div class="qcard s2" id="pCard">
+   <div class="qmeta"><span class="tagp st2">Воспроизведение</span><span class="tagp ask" id="pAsk"></span><span class="tagp" id="pTag"></span></div>
+   <div class="qmain" id="pQ"></div>
+   <div class="qsub" id="pDir"></div>
+  </div>
+  <input class="ansin" id="ans" aria-label="Ответ" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+   placeholder="Ответ своими словами" onkeydown="if(event.key==='Enter')send()">
+  <div class="acts">
+   <button class="btn pri" onclick="send()">Ответить</button>
+   <button class="btn" onclick="giveUp()">Не помню</button>
+  </div>
+ </div>
+
+ <div class="pane" id="p-review">
+  <div class="pline"><div class="ptrack"><i id="rBar"></i></div><div class="pmeta" id="rMeta"></div></div>
+  <div id="rVerdict"></div>
+  <div class="qcard s2" id="rCard">
+   <div class="qmeta"><span class="tagp st2">Повторение</span><span class="tagp ask" id="rAsk"></span><span class="tagp" id="rTag"></span></div>
+   <div class="qmain" id="rQ"></div>
+   <div class="qsub" id="rDir"></div>
+  </div>
+  <input class="ansin" id="rans" aria-label="Ответ" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+   placeholder="Ответ своими словами" onkeydown="if(event.key==='Enter')rSend()">
+  <div class="acts">
+   <button class="btn pri" onclick="rSend()">Ответить</button>
+   <button class="btn" onclick="rGiveUp()">Не помню</button>
+  </div>
+ </div>
+
+ <div class="pane" id="p-theory"></div>
+ <div class="pane" id="p-stats"></div>
+
+</div></main>
+</div>
+
+<script>
+const SECTIONS = [{"id": "noun", "title": "Существительное", "desc": "Стихии рода, маркеры числа, функциональные глаголы, именные приставки и суффиксы.", "groups": [{"g": "Стихии — род", "items": [{"q": "der", "a": "раскалён докрасна, дымится, не притронуться", "acc": ["огон", "раскал", "гор", "красн"], "n": "Меняет поведение предмета, а не его цвет.", "e": "der Tisch, der Baum, der Kopf, der Weg", "w": 5}, {"q": "die", "a": "мокрый насквозь, с него течёт, он скользкий", "acc": ["вод", "мокр", "теч", "скольз"], "n": "Меняет поведение предмета, а не его цвет.", "e": "die Wand, die Hand, die Tür, die Stadt", "w": 5}, {"q": "das", "a": "каменный, тяжёлый, крошится по краям", "acc": ["камен", "камн", "тяжёл", "тяжел", "крош"], "n": "Меняет поведение предмета, а не его цвет.", "e": "das Buch, das Fenster, das Haus, das Kind", "w": 5}], "cols": ["Артикль", "Образ в сцене", "Примеры слов"], "about": "Обязательный третий слот существительного. Стихия должна менять поведение предмета, а не его цвет.", "bi": true, "ask": "Компонент образа", "askRev": "Артикль"}, {"g": "Маркеры числа", "items": [{"q": "-e", "a": "рядом встаёт второй такой же, оба стоят неподвижно", "acc": ["пар", "второй", "два", "рядом"], "n": "Жёсткие, форму держат — умлаута нет.", "e": "der Tisch → die Tische · das Jahr → die Jahre", "w": 5}, {"q": "-¨e", "a": "два раздутых предмета распирает, они выгибаются дугой", "acc": ["выгиба", "дуг", "распир", "разду", "два", "пара"], "n": "", "e": "die Hand → die Hände · der Baum → die Bäume", "w": 5}, {"q": "-er", "a": "объекты разлетаются во все стороны", "acc": ["разлёт", "разлет", "в стороны", "улет", "лете", "стороны"], "n": "Жёсткие, форму держат — умлаута нет.", "e": "das Kind → die Kinder · das Bild → die Bilder", "w": 5}, {"q": "-¨er", "a": "раздутые объекты лопаются в полёте", "acc": ["лопа", "полёт", "полет", "разду", "взрыв", "улет", "лете", "разлет", "разлёт"], "n": "", "e": "das Buch → die Bücher · das Haus → die Häuser", "w": 5}, {"q": "-(e)n", "a": "объекты валят потоком, конца не видно", "acc": ["ста", "поток", "валят", "лавин", "конец", "бесконеч"], "n": "Не две штуки и не горсть, а бесконечная лавина.", "e": "die Frau → die Frauen · die Zeitung → die Zeitungen", "w": 5}, {"q": "-nen", "a": "поток объектов, каждый покрыт инеем", "acc": ["иней", "ста"], "n": "Иней — образ суффикса -in, от которого это множественное и образуется.", "e": "die Lehrerin → die Lehrerinnen", "w": 5}, {"q": "-s", "a": "объекты шипят и растворяются в пену", "acc": ["шип", "пен", "раствор"], "n": "Заимствования: группа не выстраивается, а расползается.", "e": "das Auto → die Autos · das Hotel → die Hotels", "w": 5}, {"q": "-¨ чистый умлаут", "a": "предмет раздувается на месте", "acc": ["разду", "наду", "на месте"], "n": "Штук столько же, но каждая распёрта изнутри.", "e": "der Vogel → die Vögel · der Apfel → die Äpfel", "w": 5}, {"q": "∅ (без изменения)", "a": "покой — предмет стоит неподвижно, ничего не меняется", "acc": ["покой", "непод", "не мен", "стоит", "ничего", "не происх", "не измен", "без измен", "неподвиж"], "n": "", "e": "der Lehrer → die Lehrer · das Fenster → die Fenster", "w": 5}, {"q": "Dativ Pl.", "a": "вся группа обрастает хвостами", "acc": ["хвост"], "n": "Одно правило на весь язык: в дательном множественного добавляется -n.", "e": "", "w": 5}], "cols": ["Окончание", "Что происходит в сцене", "Примеры"], "about": "Ставится, только если множественное непредсказуемо по суффиксу.", "bi": true, "ask": "Компонент образа", "askRev": "Окончание"}, {"g": "Поведения функциональных глаголов", "items": [{"q": "treffen", "a": "бьёт в цель", "acc": ["цел", "бьёт", "бьет", "попада"], "n": "Принять решение, сделать выбор.", "e": "eine Entscheidung ~, eine Wahl ~, Maßnahmen ~", "w": 4}, {"q": "stellen", "a": "ставит вертикально", "acc": ["вертикал", "ставит"], "n": "Задать вопрос, подать заявление.", "e": "eine Frage ~, einen Antrag ~, eine Bedingung ~", "w": 4}, {"q": "halten", "a": "держит на весу", "acc": ["весу", "держ"], "n": "Сделать доклад, произнести речь.", "e": "einen Vortrag ~, eine Rede ~, ein Versprechen ~", "w": 4}, {"q": "machen", "a": "лепит руками", "acc": ["леп"], "n": "Внести предложение, допустить ошибку.", "e": "einen Vorschlag ~, einen Fehler ~, sich Sorgen ~", "w": 4}, {"q": "geben", "a": "протягивает", "acc": ["протяг"], "n": "Дать ответ, дать совет.", "e": "eine Antwort ~, einen Rat ~, eine Auskunft ~", "w": 4}, {"q": "nehmen", "a": "выхватывает", "acc": ["выхват"], "n": "Считаться с кем-л., проститься, сесть.", "e": "Rücksicht ~, Abschied ~, Platz ~", "w": 4}, {"q": "führen", "a": "ведёт за руку", "acc": ["вед"], "n": "Вести разговор, вести войну.", "e": "ein Gespräch ~, Krieg ~, eine Diskussion ~", "w": 4}, {"q": "ziehen", "a": "тянет", "acc": ["тян"], "n": "Сделать вывод, подвести итог.", "e": "einen Schluss ~, eine Bilanz ~, Konsequenzen ~", "w": 4}, {"q": "leisten", "a": "выкладывает", "acc": ["выклад"], "n": "Оказать помощь, оказать сопротивление.", "e": "Hilfe ~, Widerstand ~, einen Beitrag ~", "w": 4}, {"q": "fassen", "a": "сжимает в кулаке", "acc": ["кулак", "сжим"], "n": "Принять решение, набраться храбрости.", "e": "einen Entschluss ~, Mut ~, Vertrauen ~", "w": 4}, {"q": "erheben", "a": "поднимает над головой", "acc": ["голов", "поднима"], "n": "Предъявить претензию, заявить протест.", "e": "Anspruch ~, Einspruch ~", "w": 4}, {"q": "setzen", "a": "вбивает", "acc": ["вбива"], "n": "Установить границы, поставить цель.", "e": "Grenzen ~, ein Ziel ~, eine Frist ~", "w": 4}], "cols": ["Глагол", "Действие над ядром", "С какими существительными"], "about": "Для абстрактного существительного глагол — часть слова. По-русски решение «принимают», по-немецки в него «попадают».", "bi": true, "ask": "Поведение в сцене", "askRev": "Глагол"}, {"g": "Именные приставки", "items": [{"q": "un-", "a": "перечёркнутый круг", "acc": ["перечёркн", "перечеркн", "круг"], "n": "Отрицание.", "e": "das Unglück, die Unruhe, unmöglich", "w": 2}, {"q": "ur-", "a": "окаменелость", "acc": ["окамен"], "n": "Исконный, первичный.", "e": "der Ursprung, der Urwald, die Ursache", "w": 2}, {"q": "haupt-", "a": "корона", "acc": ["корон"], "n": "Главный.", "e": "die Hauptstadt, der Hauptbahnhof", "w": 2}, {"q": "grund-", "a": "фундамент", "acc": ["фундамент"], "n": "Основной, коренной.", "e": "das Grundgesetz, grundsätzlich", "w": 2}, {"q": "erz-", "a": "тройная нашивка", "acc": ["нашивк", "тройн"], "n": "Наивысшая степень.", "e": "der Erzfeind", "w": 2}, {"q": "riesen- / blitz-", "a": "великан / молния", "acc": ["великан", "молн"], "n": "Усиление.", "e": "der Riesenerfolg, blitzschnell", "w": 2}], "cols": ["Приставка", "Образ", "Примеры"], "about": "Меняют значение существительного или прилагательного, грамматики не несут.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Суффиксы: женский род", "items": [{"q": "-ung", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Zeitung, die Übung, die Genehmigung", "w": 4}, {"q": "-heit", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Freiheit, die Krankheit", "w": 4}, {"q": "-keit", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Möglichkeit, die Einsamkeit", "w": 4}, {"q": "-schaft", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Freundschaft, die Wissenschaft", "w": 4}, {"q": "-ei", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Bäckerei, die Polizei", "w": 4}, {"q": "-ion / -tion", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Nation, die Information", "w": 4}, {"q": "-ik", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Musik, die Technik, die Politik", "w": 4}, {"q": "-tät / -ität", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Universität, die Qualität", "w": 3}, {"q": "-ur", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Natur, die Kultur", "w": 3}, {"q": "-in", "a": "die, мн. -nen", "acc": ["die"], "n": "Удвоение n во множественном.", "e": "die Lehrerin, die Ärztin", "w": 4}, {"q": "-ie", "a": "die, мн. -n", "acc": ["die"], "n": "", "e": "die Chemie, die Energie, die Familie", "w": 2}, {"q": "-age / -ade", "a": "die, мн. -n", "acc": ["die"], "n": "", "e": "die Garage, die Marmelade", "w": 2}, {"q": "-anz / -enz", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Toleranz, die Konferenz", "w": 2}, {"q": "-ette / -esse", "a": "die, мн. -n", "acc": ["die"], "n": "Но das Interesse.", "e": "die Zigarette, die Delikatesse", "w": 2}, {"q": "-t отглагольный", "a": "die, мн. -en", "acc": ["die"], "n": "", "e": "die Fahrt, die Sicht, die Schrift, die Macht", "w": 4}, {"q": "-e неодушевлённое", "a": "die, мн. -n", "acc": ["die"], "n": "Исключения: der Name, der Käse, das Auge, das Ende, das Interesse, das Erbe.", "e": "die Lampe, die Blume, die Sprache", "w": 4}], "cols": ["Суффикс", "Род и множественное", "Примеры"], "about": "Образа не имеют: род кодируется стихией. Надёжные соответствия, но не гарантии — артикль смотрится в словаре.", "bi": false, "ask": "Грамматика", "askRev": ""}, {"g": "Суффиксы: средний род", "items": [{"q": "-chen / -lein", "a": "das, мн. ∅", "acc": ["das"], "n": "", "e": "das Mädchen, das Brötchen, das Fräulein", "w": 5}, {"q": "-ment", "a": "das, мн. -e", "acc": ["das"], "n": "", "e": "das Instrument, das Dokument", "w": 3}, {"q": "-um", "a": "das, мн. -en / -a", "acc": ["das"], "n": "", "e": "das Zentrum → Zentren · das Praktikum → Praktika", "w": 3}, {"q": "-o", "a": "das, мн. -s", "acc": ["das"], "n": "Исключения: die Avocado, der Euro.", "e": "das Auto, das Kino, das Büro", "w": 3}, {"q": "Ge-…-e циркумфикс", "a": "das, мн. ∅", "acc": ["das"], "n": "", "e": "das Gebäude, das Gemälde, das Gemüse, das Gebirge", "w": 4}, {"q": "-tum", "a": "das, мн. -¨er", "acc": ["das"], "n": "Исключения: der Reichtum, der Irrtum.", "e": "das Eigentum", "w": 2}, {"q": "-icht", "a": "das, мн. -e", "acc": ["das"], "n": "", "e": "das Dickicht", "w": 1}, {"q": "-nis", "a": "чаще das, но треть die", "acc": ["das", "die"], "n": "die: Kenntnis, Erkenntnis, Erlaubnis, Wildnis, Finsternis.", "e": "das Ergebnis, das Geheimnis, das Verständnis", "w": 3}, {"q": "Ge- голый префикс", "a": "чаще das, но есть der и die", "acc": ["das"], "n": "der: Gedanke, Geruch, Geschmack, Gewinn. die: Gefahr, Geduld, Gewalt, Geschichte.", "e": "das Gespräch, das Getränk", "w": 4}], "cols": ["Суффикс", "Род и множественное", "Примеры"], "about": "То же: справочное знание, а не образ.", "bi": false, "ask": "Грамматика", "askRev": ""}, {"g": "Суффиксы: мужской род", "items": [{"q": "-er отглагольный", "a": "der, мн. ∅", "acc": ["der"], "n": "От глагола: lehren → der Lehrer.", "e": "der Lehrer, der Fahrer", "w": 5}, {"q": "-er от существительного", "a": "der, мн. ∅", "acc": ["der"], "n": "От топонима или существительного.", "e": "der Berliner, der Ausländer", "w": 4}, {"q": "-ler / -ner", "a": "der, мн. ∅", "acc": ["der"], "n": "", "e": "der Sportler, der Rentner, der Gärtner", "w": 3}, {"q": "-ling", "a": "der, мн. -e", "acc": ["der"], "n": "", "e": "der Frühling, der Lehrling", "w": 2}, {"q": "-ismus", "a": "der, мн. -men", "acc": ["der"], "n": "", "e": "der Kapitalismus", "w": 2}, {"q": "-ant / -ent", "a": "der, мн. -en, слабое склонение", "acc": ["der"], "n": "", "e": "der Praktikant, der Student", "w": 3}, {"q": "-ist", "a": "der, мн. -en, слабое склонение", "acc": ["der"], "n": "", "e": "der Journalist", "w": 3}, {"q": "-oge", "a": "der, мн. -n, слабое склонение", "acc": ["der"], "n": "", "e": "der Biologe", "w": 1}, {"q": "-graph / -soph", "a": "der, мн. -en, слабое склонение", "acc": ["der"], "n": "", "e": "der Fotograf, der Philosoph", "w": 1}, {"q": "-eur", "a": "der, мн. -e", "acc": ["der"], "n": "", "e": "der Ingenieur, der Friseur", "w": 2}, {"q": "-or", "a": "der, мн. -en", "acc": ["der"], "n": "", "e": "der Motor, der Doktor", "w": 3}, {"q": "-us", "a": "der", "acc": ["der"], "n": "Латинские абстрактные → -en. Бытовые: Bus → Busse.", "e": "der Rhythmus → Rhythmen", "w": 2}, {"q": "-ich / -ig", "a": "der, мн. -e", "acc": ["der"], "n": "", "e": "der Teppich, der Honig, der König", "w": 2}, {"q": "-e одушевлённое", "a": "der, слабое склонение", "acc": ["der"], "n": "Склоняются со слабым -n.", "e": "der Junge, der Kollege, der Löwe, der Franzose", "w": 4}], "cols": ["Суффикс", "Род и множественное", "Примеры"], "about": "Тест на «-er»: есть глагол-источник → der; есть существительное или топоним → der; нет ни того ни другого → правило не применяется.", "bi": false, "ask": "Грамматика", "askRev": ""}]}, {"id": "verb", "title": "Глагол", "desc": "Опоры, крепежи управления, возвратность, чередование основы, комнаты претерита, глагольные приставки и суффиксы.", "groups": [{"g": "Опоры — вспомогательный глагол", "items": [{"q": "haben", "a": "предмет зажат у вас в руках, вы его не отпускаете", "acc": ["рук", "держ", "зажат"], "n": "Большинство глаголов. Переходные всегда haben.", "e": "hat gearbeitet, hat gelesen, hat gewartet", "w": 5}, {"q": "sein", "a": "предмет вырывается и улетает сам", "acc": ["вырыва", "улета", "лет", "сам"], "n": "Картинка совпадает с движением, но это подсказка: bleiben берёт sein без движения.", "e": "ist gefahren, ist gekommen, ist geblieben", "w": 5}], "cols": ["Вспомогательный", "Образ в сцене", "Примеры"], "about": "Третий слот глагола. Картинка sein совпадает с движением, но это подсказка: bleiben берёт sein без движения.", "bi": true, "ask": "Компонент образа", "askRev": "Вспомогательный глагол"}, {"g": "Крепежи — управление", "items": [{"q": "auf", "a": "крыша", "acc": ["крыш"], "n": "Akkusativ — крепёж обрушивается.", "e": "warten auf, sich freuen auf, achten auf, hoffen auf", "w": 5}, {"q": "an", "a": "гвоздь", "acc": ["гвозд"], "n": "Akk и Dat: denken an (Akk), teilnehmen an (Dat).", "e": "denken an, sich erinnern an, leiden an", "w": 5}, {"q": "für", "a": "зонт защищающий", "acc": ["зонт"], "n": "Akkusativ.", "e": "sich interessieren für, danken für, sorgen für", "w": 5}, {"q": "über", "a": "мост", "acc": ["мост"], "n": "Akkusativ.", "e": "sprechen über, nachdenken über, sich ärgern über", "w": 5}, {"q": "mit", "a": "цепь", "acc": ["цеп"], "n": "Dativ.", "e": "rechnen mit, anfangen mit, sich beschäftigen mit", "w": 5}, {"q": "nach", "a": "стрелка вслед", "acc": ["стрелк"], "n": "Dativ.", "e": "fragen nach, suchen nach, riechen nach", "w": 5}, {"q": "von", "a": "магнит отрывающий", "acc": ["магнит"], "n": "Dativ.", "e": "träumen von, abhängen von, erzählen von", "w": 5}, {"q": "zu", "a": "замо́к", "acc": ["замок", "замо"], "n": "Dativ.", "e": "gehören zu, führen zu, gratulieren zu", "w": 5}, {"q": "in", "a": "коробка", "acc": ["коробк"], "n": "Akk и Dat: sich verlieben in (Akk), bestehen in (Dat).", "e": "sich verlieben in, einwilligen in", "w": 5}, {"q": "um", "a": "верёвка вокруг", "acc": ["верёвк", "веревк"], "n": "Akkusativ.", "e": "bitten um, sich kümmern um, kämpfen um", "w": 5}, {"q": "Akkusativ", "a": "крепёж бьёт, врезается, обрушивается", "acc": ["бьёт", "бьет", "обруш", "врез", "удар"], "n": "", "e": "", "w": 5}, {"q": "Dativ", "a": "крепёж лежит неподвижно", "acc": ["лежит", "неподвиж"], "n": "", "e": "", "w": 5}, {"q": "голый датив (без предлога)", "a": "объект лежит на подушке, к нему не прикасаются", "acc": ["подушк"], "n": "helfen, danken, folgen, gefallen, gehören, passen, begegnen, gratulieren, vertrauen, antworten, glauben, dienen, schaden, fehlen", "e": "", "w": 5}], "cols": ["Предлог или падеж", "Крепёж в сцене", "Примеры"], "about": "Предлог задаётся предметом, падеж — его движением: Akkusativ бьёт, Dativ лежит.", "bi": true, "ask": "Компонент образа", "askRev": "Предлог или падеж"}, {"g": "Возвратность", "items": [{"q": "sich", "a": "зеркало, действие возвращается к вам", "acc": ["зеркал"], "n": "Разбитое зеркало занято приставкой zer-.", "e": "", "w": 5}, {"q": "sich + Akkusativ", "a": "зеркало прямо перед вами", "acc": ["перед", "прямо"], "n": "sich waschen, sich freuen, sich setzen", "e": "sich waschen, sich freuen, sich setzen", "w": 5}, {"q": "sich + Dativ", "a": "зеркало сбоку, вы смотрите не прямо в него", "acc": ["сбок"], "n": "sich die Hände waschen, sich etwas merken", "e": "sich die Hände waschen, sich etwas merken", "w": 5}], "cols": ["Форма", "Образ", "Примеры"], "about": "Немецкие возвратные глаголы часто не совпадают с русскими: sich erinnern — вспоминать, без «-ся».", "bi": true, "ask": "Компонент образа", "askRev": "Форма"}, {"g": "Чередование основы", "items": [{"q": "a → ä", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "fahren → fährt, tragen, schlafen", "e": "fahren → fährt, tragen, schlafen", "w": 5}, {"q": "o → ö", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "stoßen → stößt", "e": "stoßen → stößt", "w": 5}, {"q": "au → äu", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "laufen → läuft", "e": "laufen → läuft", "w": 5}, {"q": "e → i / ie", "a": "предмет усыхает и стягивается (i) или вытягивается в длину (ie)", "acc": ["усыха", "стягив", "вытягив", "сжим"], "n": "Краткое e даёт стягивание, долгое — вытягивание. Исключения: geben, nehmen, treten.", "e": "helfen → hilft · sehen → sieht", "w": 5}], "cols": ["Чередование", "Маркер в сцене", "Примеры"], "about": "Во 2-м и 3-м лице единственного числа настоящего времени.", "bi": true, "ask": "Компонент образа", "askRev": "Чередование"}, {"g": "Комнаты претерита", "items": [{"q": "ei – ie/i", "a": "библиотека, два угла", "acc": ["библиотек"], "n": "Звонкий согласный → ie–ie, глухой → i–i. Исключения: leiden, schneiden.", "e": "bleiben, schreiben, steigen · greifen, reiten, beißen", "w": 3}, {"q": "ie – o – o", "a": "мастерская", "acc": ["мастерск"], "n": "", "e": "fliegen, ziehen, bieten, schließen, verlieren", "w": 3}, {"q": "i – a – u", "a": "подвал", "acc": ["подвал"], "n": "", "e": "trinken, finden, singen, springen", "w": 3}, {"q": "i – a – o", "a": "котельная", "acc": ["котельн"], "n": "", "e": "beginnen, gewinnen, schwimmen", "w": 3}, {"q": "e – a – o", "a": "кухня", "acc": ["кухн"], "n": "", "e": "nehmen, sprechen, helfen, sterben, werfen", "w": 3}, {"q": "e – a – e", "a": "столовая", "acc": ["столов"], "n": "", "e": "geben, sehen, essen, lesen, treten", "w": 3}, {"q": "i / ie – a – e", "a": "кабинет", "acc": ["кабинет"], "n": "", "e": "sitzen, bitten, liegen", "w": 3}, {"q": "e / ü – o – o", "a": "ванная", "acc": ["ванн"], "n": "", "e": "heben, lügen, betrügen, schwören", "w": 3}, {"q": "a – u – a", "a": "гараж", "acc": ["гараж"], "n": "", "e": "fahren, tragen, laden, schlagen", "w": 3}, {"q": "претерит ie/i, гласная возвращается", "a": "сад, два угла", "acc": ["сад"], "n": "Долгий ie: fallen, halten, lassen. Краткий i: fangen, hängen.", "e": "fallen, halten, lassen · fangen, hängen", "w": 3}, {"q": "o – a – o", "a": "прихожая", "acc": ["прихож"], "n": "", "e": "kommen", "w": 3}, {"q": "нерегулярные", "a": "кладовка", "acc": ["кладовк"], "n": "", "e": "gehen, stehen, tun, sein, werden, bringen, denken, wissen", "w": 5}, {"q": "слабая парадигма омографа", "a": "коридор", "acc": ["коридор"], "n": "hängen/hängte, erschrecken/erschreckte, schaffen/schaffte, bewegen/bewegte, wiegen/wiegte, senden/sendete", "e": "", "w": 2}], "cols": ["Схема", "Комната", "Глаголы"], "about": "Комната восстанавливает класс и сокращает число независимых единиц. Форму она не выдаёт — форма проверяется.", "bi": false, "ask": "Локация", "askRev": ""}, {"g": "Приставки: неотделяемые", "items": [{"q": "be-", "a": "бетон заливает поверхность", "acc": ["бетон"], "n": "Охват объекта, переходность. Не берёт ge- в перфекте.", "e": "antworten → beantworten · suchen → besuchen", "w": 5}, {"q": "ge-", "a": "серая гиря", "acc": ["гир"], "n": "Результат, совместность. Синхронно непродуктивна.", "e": "hören → gehören · fallen → gefallen", "w": 3}, {"q": "er-", "a": "эрудит добивается своего", "acc": ["эрудит"], "n": "Достижение результата, начало.", "e": "finden → erfinden · kennen → erkennen", "w": 5}, {"q": "ver-", "a": "вертолёт улетает не туда", "acc": ["вертол"], "n": "«Не туда», порча, израсходование, завершение.", "e": "sich verlaufen · verkaufen · versprechen", "w": 5}, {"q": "zer-", "a": "зеркало вдребезги", "acc": ["зеркал", "вдребезг"], "n": "Разрушение на части.", "e": "brechen → zerbrechen · stören → zerstören", "w": 4}, {"q": "ent-", "a": "энтомолог отрывает крыло", "acc": ["энтомолог"], "n": "Отделение, удаление, начало.", "e": "decken → entdecken · lassen → entlassen", "w": 4}, {"q": "emp-", "a": "тот же энтомолог, но шёпотом", "acc": ["шёпот", "шепот", "энтомолог"], "n": "Вариант ent-, три глагола.", "e": "empfehlen, empfangen, empfinden", "w": 2}, {"q": "miss-", "a": "стрела мимо", "acc": ["стрел", "мимо"], "n": "Неудача, ошибка.", "e": "missverstehen, misslingen, misstrauen", "w": 3}], "cols": ["Приставка", "Образ, приварен к корню", "Примеры"], "about": "Всегда безударные, не берут ge- в перфекте.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Приставки: отделяемые", "items": [{"q": "ab-", "a": "абордажный крюк отрывает", "acc": ["абордаж", "крюк"], "n": "Прочь, вниз, завершение.", "e": "abfahren, abnehmen, abschließen", "w": 5}, {"q": "an-", "a": "антенна касается", "acc": ["антенн"], "n": "Касание, начало, частичность.", "e": "anrufen, anfangen, anziehen", "w": 5}, {"q": "auf-", "a": "лифт взмывает", "acc": ["лифт"], "n": "Вверх, открытие, внезапность.", "e": "aufstehen, aufmachen, aufhören, aufpassen", "w": 5}, {"q": "aus-", "a": "дверь наружу", "acc": ["двер", "наруж"], "n": "Наружу, до конца, исчерпание.", "e": "ausgehen, aussehen, ausmachen", "w": 5}, {"q": "bei-", "a": "приставная лестница", "acc": ["лестниц"], "n": "Рядом, добавление.", "e": "beitragen, beibringen", "w": 2}, {"q": "ein-", "a": "воронка втягивает", "acc": ["воронк"], "n": "Внутрь.", "e": "einsteigen, einladen, einkaufen", "w": 5}, {"q": "fort- / weg-", "a": "указатель прочь", "acc": ["указател"], "n": "Прочь, продолжение.", "e": "fortsetzen, weggehen", "w": 3}, {"q": "her-", "a": "рука тянет к себе", "acc": ["тянет к себе", "к себе"], "n": "К говорящему.", "e": "herkommen, herstellen", "w": 3}, {"q": "hin-", "a": "рука отталкивает", "acc": ["отталкива"], "n": "От говорящего.", "e": "hingehen, hinfallen, hinweisen", "w": 3}, {"q": "los-", "a": "сорванная цепь", "acc": ["сорван", "цеп"], "n": "Отделение, внезапное начало.", "e": "losfahren, loslassen", "w": 3}, {"q": "mit-", "a": "митинг, толпа", "acc": ["митинг", "толп"], "n": "Вместе, участие.", "e": "mitkommen, mitbringen, mitteilen", "w": 4}, {"q": "nach-", "a": "ночной преследователь", "acc": ["ночн", "преслед"], "n": "Вслед, после, повторно.", "e": "nachdenken, nachfragen, nachholen", "w": 4}, {"q": "vor-", "a": "вор бежит впереди", "acc": ["вор"], "n": "Перед, заранее, вперёд.", "e": "vorstellen, vorbereiten, vorschlagen", "w": 5}, {"q": "zu-", "a": "зубы смыкаются", "acc": ["зуб"], "n": "Закрытие, направление к.", "e": "zumachen, zuhören, zunehmen", "w": 5}, {"q": "zurück-", "a": "пятящийся рак", "acc": ["рак", "пятящ"], "n": "Назад.", "e": "zurückkommen, zurückgeben", "w": 4}, {"q": "zusammen-", "a": "сжатый кулак", "acc": ["кулак"], "n": "Воедино.", "e": "zusammenarbeiten, zusammenfassen", "w": 3}, {"q": "weiter-", "a": "бегущая дорожка", "acc": ["дорожк", "бегущ"], "n": "Дальше, продолжение.", "e": "weitermachen, weitergehen", "w": 3}, {"q": "teil-", "a": "разрезанный пирог", "acc": ["пирог"], "n": "Участие.", "e": "teilnehmen", "w": 2}, {"q": "fest-", "a": "вбитый костыль", "acc": ["костыл"], "n": "Прочно, фиксация.", "e": "festhalten, feststellen", "w": 2}, {"q": "statt-", "a": "пустая сцена", "acc": ["сцен"], "n": "Состояться.", "e": "stattfinden", "w": 2}], "cols": ["Приставка", "Образ, отлетает от корня", "Примеры"], "about": "Всегда ударные, ge- встаёт между приставкой и корнем.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Приставки: переменные", "items": [{"q": "über-", "a": "великан перешагивает", "acc": ["великан"], "n": "Ударная — отделяемая: ˈübersetzen перевезти. Безударная: überˈsetzen переводить.", "e": "", "w": 4}, {"q": "unter-", "a": "подвал", "acc": ["подвал"], "n": "ˈunterbringen разместить · unterˈbrechen прервать.", "e": "", "w": 4}, {"q": "um-", "a": "зонт крутится", "acc": ["зонт"], "n": "ˈumfahren сбить · umˈfahren объехать.", "e": "", "w": 4}, {"q": "durch-", "a": "дуршлаг", "acc": ["дуршлаг"], "n": "ˈdurchfallen провалиться · durchˈschauen раскусить.", "e": "", "w": 4}, {"q": "wider-", "a": "щит", "acc": ["щит"], "n": "ˈwiderspiegeln отражать · widerˈsprechen противоречить.", "e": "", "w": 2}, {"q": "wieder-", "a": "бумеранг", "acc": ["бумеранг"], "n": "ˈwiederkommen · wiederˈholen повторять.", "e": "", "w": 3}, {"q": "hinter-", "a": "спина", "acc": ["спин"], "n": "hinterˈlassen оставить.", "e": "", "w": 2}, {"q": "ударение на приставке", "a": "приставка отлетает от корня", "acc": ["отлета", "отрыва", "отделя"], "n": "Отделяемая.", "e": "", "w": 5}, {"q": "ударение на корне", "a": "приставка приварена к корню намертво", "acc": ["приварен", "намертво", "сросл"], "n": "Неотделяемая.", "e": "", "w": 5}], "cols": ["Приставка", "Образ", "Ударная и безударная формы"], "about": "Отделяемость определяется ударением, а не смыслом. Ударение видно в транскрипции.", "bi": true, "ask": "Образ", "askRev": "Приставка"}, {"g": "Суффиксы глаголов", "items": [{"q": "-isieren", "a": "конвейер завода перерабатывает сырьё в готовое X на выходе", "acc": ["конвейер", "перераба"], "n": "Превращает в X — обычно интернациональный корень.", "e": "realisieren, organisieren, modernisieren", "w": 2}, {"q": "-igen", "a": "та же игла, что у -ig, но теперь в деле — вшивает свойство X прямо в объект", "acc": ["игл", "вшива"], "n": "Делает X — каузатив от прилагательного/существительного. Родство с -ig не случайно: там состояние, здесь действие.", "e": "beruhigen (← ruhig), reinigen (← rein), entschuldigen, genehmigen", "w": 3}, {"q": "-eln / -ern", "a": "колокольчик дребезжит частой мелкой дрожью", "acc": ["колокольчик", "дребезж"], "n": "X-ает мелкими повторами — уменьшительно-итеративный оттенок.", "e": "lächeln, klingeln, wandern, zittern", "w": 2}], "cols": ["Суффикс", "Образ", "Примеры"], "about": "Единственное исключение — -ieren: правило «без ge- в перфекте» (studieren → hat studiert) не имеет исключений и своего значения не несёт, поэтому образа не получает и в карточки не включён.", "bi": true, "ask": "Образ", "askRev": "Суффикс"}]}, {"id": "adj", "title": "Прилагательное", "desc": "Степени сравнения, крепежи управления, адъективные суффиксы.", "groups": [{"g": "Степени сравнения", "items": [{"q": "регулярная степень", "a": "ничего не меняется", "acc": ["ничего", "нет"], "n": "", "e": "schnell → schneller → am schnellsten", "w": 5}, {"q": "умлаут в сравнении", "a": "предмет раздувается", "acc": ["разду", "наду", "натян"], "n": "alt, jung, lang, kurz, warm, kalt, stark, scharf, hart, klug, dumm, arm, schwach, grob, gesund, krank", "e": "alt → älter · jung → jünger", "w": 5}, {"q": "неправильная степень", "a": "предмет подменяется другим", "acc": ["подмен", "друг"], "n": "gut → besser · viel → mehr · gern → lieber", "e": "gut → besser · viel → mehr · gern → lieber · hoch → höher · nah → näher", "w": 5}], "cols": ["Тип", "Маркер в сцене", "Примеры"], "about": "Единственное дополнение, специфичное для прилагательного.", "bi": false, "ask": "Компонент образа", "askRev": ""}, {"g": "Крепежи прилагательных", "items": [{"q": "stolz auf (+ Akk)", "a": "крыша, обрушивается", "acc": ["крыш"], "n": "", "e": "stolz auf seinen Sohn", "w": 3}, {"q": "böse auf (+ Akk)", "a": "крыша, обрушивается", "acc": ["крыш"], "n": "", "e": "böse auf den Nachbarn", "w": 3}, {"q": "zufrieden mit (+ Dat)", "a": "цепь, лежит неподвижно", "acc": ["цеп"], "n": "", "e": "zufrieden mit dem Ergebnis", "w": 3}, {"q": "interessiert an (+ Dat)", "a": "гвоздь, лежит неподвижно", "acc": ["гвозд"], "n": "", "e": "interessiert an Musik", "w": 3}, {"q": "bereit zu (+ Dat)", "a": "замо́к", "acc": ["замок", "замо"], "n": "", "e": "bereit zum Aufbruch", "w": 3}, {"q": "fähig zu (+ Dat)", "a": "замо́к", "acc": ["замок", "замо"], "n": "", "e": "fähig zu allem", "w": 3}, {"q": "reich / arm an (+ Dat)", "a": "гвоздь", "acc": ["гвозд"], "n": "", "e": "reich an Vitaminen", "w": 3}, {"q": "abhängig von (+ Dat)", "a": "магнит", "acc": ["магнит"], "n": "", "e": "abhängig von der Meinung", "w": 3}, {"q": "verantwortlich für (+ Akk)", "a": "зонт", "acc": ["зонт"], "n": "", "e": "verantwortlich für das Projekt", "w": 3}, {"q": "überzeugt von (+ Dat)", "a": "магнит", "acc": ["магнит"], "n": "", "e": "überzeugt von der Idee", "w": 3}], "cols": ["Прилагательное с предлогом", "Крепёж", "Пример"], "about": "Прилагательные берут те же крепежи, что и глаголы — новых образов не требуется.", "bi": false, "ask": "Компонент образа", "askRev": ""}, {"g": "Суффиксы прилагательных: настоящие", "items": [{"q": "-ig", "a": "ёж — покрывается иголками, топорщится качеством X", "acc": ["ёж", "игол", "топорщ"], "n": "Обладает свойством X — самый частый адъективатор.", "e": "sonnig, durstig, neugierig, fleißig, wichtig", "w": 5}, {"q": "-lich", "a": "лишайник — обрастает тонкой плёнкой качества X", "acc": ["лишайник", "плёнк", "пленк"], "n": "X-подобный, склонный к X — мягче и разлитее, чем у -ig.", "e": "freundlich, möglich, endlich, rötlich", "w": 5}, {"q": "-isch", "a": "афиша, наклеенная на объект, объявляет его роль или происхождение", "acc": ["афиш", "роль", "происхожд"], "n": "Относящийся к X, иногда с оттенком насмешки.", "e": "russisch, typisch, kindisch, praktisch", "w": 4}, {"q": "-bar", "a": "барьер, который объект свободно берёт с разбега", "acc": ["барьер", "берёт", "берет"], "n": "Поддаётся X, можно X-ать — способность приходит извне (пассив).", "e": "essbar, machbar, tragbar, sichtbar", "w": 5}, {"q": "-sam", "a": "штамп «САМ» — объект заведён, как игрушка, и повторяет действие без посторонней помощи", "acc": ["сам", "штамп", "игрушк"], "n": "Делает X по собственной природе.", "e": "langsam, sparsam, aufmerksam, gehorsam", "w": 3}, {"q": "-haft", "a": "кафтан, наброшенный на объект — похож, но это надетое, не сросшееся", "acc": ["кафтан", "наброшен"], "n": "Несёт черту X, отчасти похож на X (тип блока ближе к B).", "e": "fehlerhaft, kindhaft, dauerhaft", "w": 2}, {"q": "-mäßig", "a": "рулетка, которой объект обмеряют и подгоняют под чужую мерку", "acc": ["рулетк", "мерк"], "n": "Сообразно X, по мерке X.", "e": "planmäßig, regelmäßig, verhältnismäßig", "w": 2}, {"q": "-fähig", "a": "объект устраивает фейерверк, демонстрируя, на что способен", "acc": ["фейерверк"], "n": "Способен на X — активно, изнутри (контраст с пассивным -bar).", "e": "leistungsfähig, fahrfähig", "w": 2}], "cols": ["Суффикс", "Образ", "Примеры"], "about": "Связанные морфемы без своего слова за спиной — образ строится с нуля, как для приставки, только приклеен в конце слова.", "bi": true, "ask": "Образ", "askRev": "Суффикс"}, {"g": "Суффиксы прилагательных: полусуффиксы", "items": [{"q": "-los", "a": "та же сорванная цепь, что у приставки los- — X срывается с объекта насовсем", "acc": ["цеп", "сорван"], "n": "Без X. То же слово los, что и в приставке.", "e": "arbeitslos, hilflos, sprachlos", "w": 4}, {"q": "-frei", "a": "фрегат уходит в вольное плавание, унося X по доброй воле", "acc": ["фрегат", "вольн", "плаван"], "n": "Свободен от X — осознанно, в отличие от -los.", "e": "bleifrei, zollfrei, schmerzfrei", "w": 3}, {"q": "-voll", "a": "вол, раздутый и полный до краёв", "acc": ["вол"], "n": "Полон X.", "e": "liebevoll, sinnvoll, wertvoll", "w": 4}, {"q": "-reich", "a": "вокруг объекта разрастается целый рейх — царство X", "acc": ["рейх", "царств"], "n": "Богат X.", "e": "erfolgreich, wasserreich", "w": 3}, {"q": "-arm", "a": "объект оголён до голой арматуры — X почти не осталось", "acc": ["арматур"], "n": "Беден X — противоположность -reich.", "e": "wasserarm, verkehrsarm, fettarm", "w": 2}, {"q": "-wert", "a": "тот же верстак оценки, что у корня wert-", "acc": ["верстак"], "n": "Стоит X — рыночная, практическая оценка.", "e": "lesenswert, sehenswert", "w": 2}, {"q": "-würdig", "a": "судья выносит вердикт — X удостаивается официально", "acc": ["вердикт", "судь"], "n": "Достоин X — формально, по чести. Рифмуется с -wert не случайно: в немецком это близкие синонимы.", "e": "glaubwürdig, preiswürdig", "w": 2}, {"q": "-artig", "a": "артист сыгран в роли X — похож через игру, не по сути", "acc": ["артист"], "n": "Сродни X, такого рода.", "e": "eigenartig, bösartig, großartig", "w": 2}, {"q": "-förmig", "a": "объект отлит в форме X, точно повторяя контур", "acc": ["форм"], "n": "В форме X.", "e": "kugelförmig, herzförmig, kreisförmig", "w": 1}, {"q": "-fach", "a": "ряд факелов, зажигающихся один за другим", "acc": ["факел"], "n": "X-кратно.", "e": "einfach, zweifach, mehrfach", "w": 2}], "cols": ["Суффикс", "Образ", "Примеры"], "about": "Исторически самостоятельные немецкие слова, сросшиеся с основой. Образ не строится заново — переиспользуется образ того же слова-корня или приставки, тот же, что в разделе «Корни».", "bi": true, "ask": "Образ", "askRev": "Суффикс"}]}, {"id": "root", "title": "Корни", "desc": "Корневой реестр: один образ обслуживает всё словообразовательное гнездо.", "groups": [{"g": "Речь и мысль", "items": [{"q": "sag-", "a": "сага, которую рассказывают", "acc": ["сага"], "n": "", "e": "sagen, die Aussage, absagen, zusagen", "w": 5}, {"q": "sprech- / sprach-", "a": "спираль изо рта", "acc": ["спирал"], "n": "", "e": "sprechen, die Sprache, das Gespräch, versprechen", "w": 5}, {"q": "red-", "a": "редька во рту", "acc": ["редьк"], "n": "", "e": "reden, die Rede, verabreden, die Verabredung", "w": 4}, {"q": "ruf-", "a": "рупор", "acc": ["рупор"], "n": "", "e": "rufen, der Ruf, anrufen, der Beruf", "w": 5}, {"q": "frag-", "a": "фрак швейцара", "acc": ["фрак"], "n": "", "e": "fragen, die Frage, nachfragen, befragen", "w": 5}, {"q": "antwort-", "a": "ответный удар", "acc": ["ответн", "удар"], "n": "", "e": "antworten, die Antwort, die Verantwortung", "w": 4}, {"q": "denk-", "a": "купюра на лбу", "acc": ["купюр"], "n": "", "e": "denken, der Gedanke, nachdenken, das Denkmal", "w": 5}, {"q": "wiss-", "a": "висок, который трут", "acc": ["висок"], "n": "", "e": "wissen, die Wissenschaft, gewiss", "w": 3}, {"q": "kenn-", "a": "кегля, которую узнают", "acc": ["кегл"], "n": "", "e": "kennen, die Kenntnis, erkennen, bekannt", "w": 4}, {"q": "lern- / lehr-", "a": "гидра у школьной доски", "acc": ["гидр"], "n": "", "e": "lernen, lehren, der Lehrer, der Lehrling", "w": 4}, {"q": "glaub-", "a": "глубина, в которую верят", "acc": ["глубин"], "n": "", "e": "glauben, der Glaube, unglaublich", "w": 3}, {"q": "mein-", "a": "мина, которую полагают", "acc": ["мин"], "n": "", "e": "meinen, die Meinung, gemeinsam", "w": 3}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Движение", "items": [{"q": "geh-", "a": "гейзер выбрасывает", "acc": ["гейзер"], "n": "", "e": "gehen, der Gang, vergehen, der Ausgang", "w": 5}, {"q": "komm-", "a": "комок прикатился", "acc": ["комок"], "n": "", "e": "kommen, die Ankunft, die Zukunft, bekommen", "w": 5}, {"q": "fahr-", "a": "фара в темноте", "acc": ["фар"], "n": "", "e": "fahren, die Fahrt, die Erfahrung, die Fahrkarte", "w": 5}, {"q": "flieg-", "a": "флигель взлетает", "acc": ["флигел"], "n": "", "e": "fliegen, der Flug, das Flugzeug", "w": 3}, {"q": "lauf-", "a": "лафет катится", "acc": ["лафет"], "n": "", "e": "laufen, der Lauf, verlaufen, die Laufbahn", "w": 5}, {"q": "zieh-", "a": "цепь, которую тянут", "acc": ["цеп"], "n": "", "e": "ziehen, der Zug, erziehen, umziehen, anziehen", "w": 5}, {"q": "trag-", "a": "трактор тащит", "acc": ["трактор"], "n": "", "e": "tragen, der Vertrag, ertragen, der Antrag", "w": 5}, {"q": "bring-", "a": "брынза в руках", "acc": ["брынз"], "n": "", "e": "bringen, verbringen, mitbringen, beibringen", "w": 5}, {"q": "steig-", "a": "стейк на вертеле поднимается", "acc": ["стейк"], "n": "", "e": "steigen, einsteigen, umsteigen, die Steigung", "w": 3}, {"q": "führ-", "a": "фюрер ведёт колонну", "acc": ["фюрер"], "n": "", "e": "führen, die Führung, einführen, ausführen", "w": 4}, {"q": "folg-", "a": "фольга тянется следом", "acc": ["фольг"], "n": "", "e": "folgen, die Folge, der Erfolg, verfolgen", "w": 4}, {"q": "fall-", "a": "фал, обрывающийся канат", "acc": ["фал"], "n": "", "e": "fallen, der Fall, gefallen, der Zufall, der Unfall", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Положение и состояние", "items": [{"q": "steh-", "a": "штанга стоит вертикально", "acc": ["штанг"], "n": "", "e": "stehen, verstehen, bestehen, entstehen, der Zustand", "w": 5}, {"q": "stell-", "a": "стела водружается", "acc": ["стел"], "n": "", "e": "stellen, die Stelle, vorstellen, herstellen, feststellen", "w": 5}, {"q": "setz-", "a": "сеть набрасывается", "acc": ["сет"], "n": "", "e": "setzen, der Satz, ersetzen, übersetzen, besetzen", "w": 5}, {"q": "leg-", "a": "лего укладывается", "acc": ["лего"], "n": "", "e": "legen, die Lage, überlegen, anlegen", "w": 4}, {"q": "halt-", "a": "халат, за который держат", "acc": ["халат"], "n": "", "e": "halten, behalten, erhalten, der Inhalt, der Aufenthalt", "w": 5}, {"q": "bleib-", "a": "блин прилип", "acc": ["блин"], "n": "", "e": "bleiben", "w": 3}, {"q": "lass-", "a": "лассо, которое отпускают", "acc": ["лассо"], "n": "", "e": "lassen, verlassen, zuverlässig, entlassen, zulassen", "w": 5}, {"q": "wohn-", "a": "вонючий подъезд", "acc": ["вонюч"], "n": "", "e": "wohnen, die Wohnung, der Einwohner, die Gewohnheit", "w": 4}, {"q": "leb-", "a": "лебедь живая", "acc": ["лебед"], "n": "", "e": "leben, das Leben, erleben, das Erlebnis", "w": 5}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Восприятие", "items": [{"q": "seh-", "a": "зев распахнутый", "acc": ["зев"], "n": "", "e": "sehen, die Sicht, die Absicht, die Aussicht", "w": 5}, {"q": "schau-", "a": "шов, который разглядывают", "acc": ["шов"], "n": "", "e": "schauen, anschauen, die Anschauung", "w": 3}, {"q": "hör-", "a": "хорь насторожился", "acc": ["хор"], "n": "", "e": "hören, aufhören, gehören, zuhören", "w": 5}, {"q": "fühl-", "a": "шаман щупает", "acc": ["шаман"], "n": "", "e": "fühlen, das Gefühl, mitfühlen", "w": 3}, {"q": "fass-", "a": "фас! — хватай", "acc": ["фас"], "n": "", "e": "fassen, verfassen, zusammenfassen", "w": 3}, {"q": "greif-", "a": "гриф вцепился", "acc": ["гриф"], "n": "", "e": "greifen, der Begriff, angreifen", "w": 3}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Действие и труд", "items": [{"q": "mach-", "a": "махина работает", "acc": ["махин"], "n": "", "e": "machen, aufmachen, mitmachen, ausmachen", "w": 5}, {"q": "tu-", "a": "туфля топает", "acc": ["туфл"], "n": "", "e": "tun, die Tat, tätig, die Tätigkeit", "w": 5}, {"q": "arbeit-", "a": "арбуз, который таскают", "acc": ["арбуз"], "n": "", "e": "arbeiten, die Arbeit, bearbeiten, verarbeiten", "w": 5}, {"q": "schaff-", "a": "шкаф сколачивают", "acc": ["шкаф"], "n": "", "e": "schaffen, beschaffen, erschaffen", "w": 3}, {"q": "wirk-", "a": "вихрь действует", "acc": ["вихр"], "n": "", "e": "wirken, die Wirkung, wirklich, verwirklichen", "w": 3}, {"q": "bau-", "a": "баул кладут в стену", "acc": ["баул"], "n": "", "e": "bauen, der Bau, das Gebäude, der Bauer, aufbauen", "w": 4}, {"q": "brauch-", "a": "брошь, которая нужна", "acc": ["брош"], "n": "", "e": "brauchen, der Gebrauch, verbrauchen", "w": 3}, {"q": "nutz-", "a": "нож, полезный инструмент", "acc": ["нож"], "n": "", "e": "nutzen, benutzen, nützlich, ausnutzen", "w": 3}, {"q": "dien-", "a": "дыня на подносе", "acc": ["дын"], "n": "", "e": "dienen, der Dienst, verdienen, bedienen", "w": 3}, {"q": "helf-", "a": "эльф помогает", "acc": ["эльф"], "n": "", "e": "helfen, die Hilfe, behilflich", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Обмен и обладание", "items": [{"q": "geb-", "a": "гэбист отбирает и отдаёт", "acc": ["гэбист", "гэбн"], "n": "", "e": "geben, die Aufgabe, ergeben, die Ausgabe, angeben", "w": 5}, {"q": "nehm-", "a": "немой выхватывает", "acc": ["немой"], "n": "", "e": "nehmen, die Aufnahme, abnehmen, zunehmen, teilnehmen", "w": 5}, {"q": "kauf-", "a": "кофе покупают", "acc": ["кофе"], "n": "", "e": "kaufen, verkaufen, einkaufen, der Verkäufer", "w": 5}, {"q": "zahl-", "a": "цапля отсчитывает", "acc": ["цапл"], "n": "", "e": "zahlen, die Zahl, bezahlen, zählen, erzählen", "w": 4}, {"q": "kost-", "a": "кость, которая дорого стоит", "acc": ["кост"], "n": "", "e": "kosten, die Kosten, kostbar, kostenlos", "w": 3}, {"q": "wert-", "a": "верстак оценки", "acc": ["верстак"], "n": "", "e": "der Wert, wertvoll, bewerten", "w": 3}, {"q": "teil-", "a": "отколотая плитка", "acc": ["плитк"], "n": "", "e": "teilen, der Teil, die Abteilung, mitteilen, das Urteil", "w": 2}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Изменение и разрушение", "items": [{"q": "schlag-", "a": "шлагбаум бьёт", "acc": ["шлагбаум"], "n": "", "e": "schlagen, der Schlag, vorschlagen, der Vorschlag", "w": 4}, {"q": "brech-", "a": "брешь в стене", "acc": ["бреш"], "n": "", "e": "brechen, der Bruch, zerbrechen, unterbrechen, das Verbrechen", "w": 4}, {"q": "schneid-", "a": "шнековый нож", "acc": ["шнеков"], "n": "", "e": "schneiden, der Schnitt, abschneiden, der Abschnitt", "w": 3}, {"q": "reiß-", "a": "рис рассыпается", "acc": ["рис"], "n": "", "e": "reißen, der Riss, zerreißen, der Reißverschluss", "w": 3}, {"q": "schließ-", "a": "шлиц, запирающий паз", "acc": ["шлиц"], "n": "", "e": "schließen, der Schluss, beschließen, der Entschluss", "w": 4}, {"q": "öffn-", "a": "офис распахнут", "acc": ["офис"], "n": "", "e": "öffnen, offen, die Öffnung, veröffentlichen", "w": 3}, {"q": "bind-", "a": "бинт связывает", "acc": ["бинт"], "n": "", "e": "binden, der Verband, verbinden, die Verbindung", "w": 4}, {"q": "scheid-", "a": "шайба, разрубленная надвое", "acc": ["шайб"], "n": "", "e": "scheiden, entscheiden, die Entscheidung, der Unterschied", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Поиск и выбор", "items": [{"q": "such-", "a": "сучок, который ищут", "acc": ["сучок"], "n": "", "e": "suchen, versuchen, der Versuch, untersuchen, der Besuch", "w": 5}, {"q": "find-", "a": "финка, найденный нож", "acc": ["финк"], "n": "", "e": "finden, erfinden, die Erfindung, stattfinden", "w": 5}, {"q": "treff-", "a": "трефы, карта попадания", "acc": ["треф"], "n": "", "e": "treffen, das Treffen, betreffen, zutreffen", "w": 4}, {"q": "wähl-", "a": "валик, которым выбирают", "acc": ["валик"], "n": "", "e": "wählen, die Wahl, auswählen, die Auswahl", "w": 4}, {"q": "prüf-", "a": "пруф, доказательство", "acc": ["пруф"], "n": "", "e": "prüfen, die Prüfung, überprüfen", "w": 3}, {"q": "rechn-", "a": "речной счётчик", "acc": ["речн", "счётчик", "счетчик"], "n": "", "e": "rechnen, die Rechnung, berechnen, ausgerechnet", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": true, "ask": "Ядро образа", "askRev": "Корень"}, {"g": "Именные корни", "items": [{"q": "Haus", "a": "дом", "acc": ["дом"], "n": "", "e": "das Haus, die Hausaufgabe, der Haushalt, zu Hause", "w": 5}, {"q": "Land", "a": "земля, страна", "acc": ["земл", "стран"], "n": "", "e": "das Land, die Landschaft, landen, der Ausländer", "w": 5}, {"q": "Zeit", "a": "время", "acc": ["врем"], "n": "", "e": "die Zeit, die Zeitung, gleichzeitig, die Freizeit", "w": 5}, {"q": "Weg", "a": "путь, дорога", "acc": ["пут", "дорог"], "n": "", "e": "der Weg, wegen, bewegen, die Bewegung, der Ausweg", "w": 5}, {"q": "Hand", "a": "рука", "acc": ["рук"], "n": "", "e": "die Hand, handeln, die Handlung, behandeln, das Handtuch", "w": 5}, {"q": "Recht", "a": "право, прямота", "acc": ["прав"], "n": "", "e": "das Recht, richtig, richten, der Bericht, die Richtung", "w": 4}, {"q": "Kraft", "a": "сила", "acc": ["сил"], "n": "", "e": "die Kraft, kräftig, verstärken", "w": 4}, {"q": "Werk / Zeug", "a": "работа / орудие", "acc": ["работ", "оруди", "инструмент"], "n": "", "e": "das Werk, das Werkzeug, das Flugzeug, das Fahrzeug", "w": 4}, {"q": "Grund", "a": "основание, дно", "acc": ["основ", "дно"], "n": "", "e": "der Grund, gründen, gründlich, der Hintergrund", "w": 4}, {"q": "Sicht", "a": "вид, зрение", "acc": ["вид", "зрен"], "n": "", "e": "die Sicht, die Absicht, die Aussicht, sichtbar", "w": 4}], "cols": ["Корень", "Образ", "Словообразовательное гнездо"], "about": "Корень кодируется один раз и работает во всём гнезде. Свой образ лучше чужого — заменять здесь можно.", "bi": false, "ask": "Значение", "askRev": ""}]}];
+
+/* ===== storage ===== */
+const SK="mrph_v2_";let OK_ST=true,MEM={};
+(function(){try{localStorage.setItem(SK+"_t","1");if(localStorage.getItem(SK+"_t")!=="1")throw 0;localStorage.removeItem(SK+"_t")}catch(e){OK_ST=false}})();
+const store={
+ get(k,d){if(!OK_ST)return k in MEM?MEM[k]:d;try{const v=localStorage.getItem(SK+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+ set(k,v){if(!OK_ST){MEM[k]=v;return}try{localStorage.setItem(SK+k,JSON.stringify(v))}catch(e){OK_ST=false;warn("Хранилище переполнено. Скачайте копию.")}},
+ all(){const o={};if(!OK_ST)return {...MEM};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
+  if(k&&k.indexOf(SK)===0)o[k.slice(SK.length)]=JSON.parse(localStorage.getItem(k))}}catch(e){}return o}
+};
+function warn(m){const b=document.getElementById("warnBar");b.innerHTML=m+' <button onclick="this.parentNode.classList.remove(&quot;on&quot;);syncSideOffset()" style="float:right;background:none;border:none;color:inherit;cursor:pointer;font-size:1rem">✕</button>';b.classList.add("on");syncSideOffset()}
+let saved=store.get("saved",0);
+function touch(){saved=Date.now();store.set("saved",saved);drawSaved()}
+function drawSaved(){
+ const el=document.getElementById("saveLine");
+ if(!OK_ST){el.innerHTML='<span style="color:var(--bad)">Не сохраняется</span> — хранилище недоступно.';return}
+ if(!saved){el.innerHTML="<b>Сохраняется автоматически.</b>";const e0=document.getElementById("saveLine2");if(e0)e0.innerHTML=el.innerHTML;return}
+ const d=new Date(saved),p=n=>String(n).padStart(2,"0");
+ const s="<b>Сохраняется автоматически.</b><br>"+p(d.getDate())+"."+p(d.getMonth()+1)+", "+p(d.getHours())+":"+p(d.getMinutes());
+ el.innerHTML=s;const e2=document.getElementById("saveLine2");if(e2)e2.innerHTML=s;
+}
+
+/* ===== index ===== */
+const IDX=[];
+SECTIONS.forEach(s=>s.groups.forEach((g,gi)=>g.items.forEach((it,ii)=>
+ IDX.push({key:s.id+"."+gi+"."+ii,sec:s.id,secT:s.title,grp:g.g,it,
+  bi:g.bi!==false,ask:g.ask||"Образ",askRev:g.askRev||"Морфема"})))); 
+const C2G={},G2C={};
+IDX.forEach((r,i)=>{C2G[r.key+"|f"]=i*2;G2C[i*2]=r.key+"|f";C2G[r.key+"|r"]=i*2+1;G2C[i*2+1]=r.key+"|r"});
+const NAV=[{id:"all",title:"Всё сразу",desc:"Все части речи в одной очереди."}].concat(SECTIONS);
+
+/* ===== srs + stages =====
+   st 0 знакомство · 1 узнавание (самооценка) · 2 воспроизведение (ввод) */
+const BOX=[0,1,3,7,16,35,90,180];
+const SRS={
+ d:store.get("srs",{}),
+ t(){return Math.floor(Date.now()/864e5)},
+ save(){store.set("srs",this.d);touch()},
+ r(k){return this.d[k]||null},
+ st(k){const r=this.d[k];if(!r)return 0;return r.st!==undefined?r.st:(r.k>=T2?2:(r.k>=T1?1:0))},
+ stage(kn){return kn>=T2?2:(kn>=T1?1:0)},
+ seen(k){const r=this.d[k]||{st:0,k:0,b:0,l:0,d:this.t()};this.d[k]=r;this.save();return r},
+ selfGrade(k,ok){
+  const r=this.d[k]||{st:0,k:0,b:0,l:0,d:this.t()};
+  const was=this.stage(r.k||0),wasK=r.k||0;
+  if(ok)r.k=(r.k||0)+1; else {r.k=Math.max(0,(r.k||0)-1);r.l=Math.min((r.l||0)+1,35)}
+  const now=this.stage(r.k);
+  r.st=now;
+  if(ok&&wasK===0)SES.intro++;
+  if(was<1&&now>=1)SES.rec++;
+  if(was<2&&now>=2){r.b=1;r.d=this.t();SES.grad++} /* due today so practice is immediately available */
+  this.d[k]=r;this.save();return r;
+ },
+ answer(k,ok){
+  const t=this.t(),r=this.d[k]||{st:2,k:2,b:0,l:0,d:t},was=r.b;
+  if(ok)r.b=Math.min(r.b+1,BOX.length-1);
+  else{r.b=0;r.l=Math.min(r.l+1,35);if(r.l>=3){r.st=1;r.k=T1;SES.demo++}}
+  r.d=t+BOX[r.b];this.d[k]=r;this.save();
+  if(ok&&was<3&&r.b>=3)SES.learn++;
+  return r;
+ },
+ reset(sec){for(const k in this.d)if(sec==="all"||k.split(".")[0]===sec)delete this.d[k];this.save()}
+};
+
+/* ===== session ===== */
+const SES={t0:Date.now(),ans:0,ok:0,near:0,str:0,best:0,learn:0,grad:0,demo:0,intro:0,rec:0,by:{},
+ act:0,last:Date.now(),idle:false};
+function poke(){
+ const now=Date.now(),gap=now-SES.last;
+ if(gap<45000&&!document.hidden)SES.act+=gap;
+ SES.last=now;SES.idle=false;
+}
+["pointerdown","keydown","wheel","touchstart"].forEach(e=>document.addEventListener(e,poke,{passive:true}));
+document.addEventListener("visibilitychange",()=>{SES.last=Date.now()});
+setInterval(()=>{const now=Date.now();if(now-SES.last>45000||document.hidden){SES.idle=true;SES.last=now}},15000);
+function bump(sec,ok){
+ SES.ans++;if(ok)SES.ok++;
+ if(ok){SES.str++;SES.best=Math.max(SES.best,SES.str)}else SES.str=0;
+ const b=SES.by[sec]||(SES.by[sec]={a:0,o:0});b.a++;if(ok)b.o++;
+ drawStreak();
+}
+function drawStreak(){
+ const c=document.getElementById("chStreak");
+ c.innerHTML="серия <b>"+SES.str+"</b>";
+ c.classList.toggle("hot",SES.str>=5);
+}
+function dur(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60);
+ return h?h+" ч "+(m%60)+" м":m?m+" м "+(s%60)+" с":s+" с"}
+
+/* ===== state ===== */
+const T1=3,T2=10;   // порог узнавания и порог перехода в практику
+const S={sec:store.get("sec","all"),tab:store.get("view","learn"),
+ dir:store.get("dir","two"),ord:store.get("ord","seq"),side:store.get("side","fwd"),
+ batch:store.get("batch",20),
+ lq:[],lc:null,lshown:false,pq:[],pc:null,pans:false,pforce:false,rq:[],rc:null,rans:false,rforce:false,recent:[]};
+if(!NAV.some(x=>x.id===S.sec))S.sec="all";
+
+function items(sec){return sec==="all"?IDX:IDX.filter(r=>r.sec===sec)}
+function cards(sec){
+ const o=[];
+ items(sec).forEach(r=>{
+  if(S.dir==="two"){o.push({...r,side:"fwd",ck:r.key+"|f"});
+   if(r.bi)o.push({...r,side:"rev",ck:r.key+"|r"})}
+  else if(S.side==="rev"&&!r.bi)o.push({...r,side:"fwd",ck:r.key+"|f"});
+  else o.push({...r,side:S.side,ck:r.key+"|"+(S.side==="fwd"?"f":"r")});
+ });return o;
+}
+const GAP=5;
+function markRecent(ck){S.recent.push(ck);if(S.recent.length>4)S.recent.shift()}
+function popNext(q){
+ if(!q.length)return null;
+ let i=q.findIndex(c=>S.recent.indexOf(c.ck)<0);
+ if(i<0)i=0;
+ return q.splice(i,1)[0];
+}
+/* верный ответ — в конец круга, неверный — примерно на треть вперёд,
+   но не ближе GAP карточек, чтобы не встретиться сразу */
+function reinsert(q,c,ok){ q.push(c); }
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function byW(a,b){const d=(b.it.w||3)-(a.it.w||3);return d!==0?d:a.key.localeCompare(b.key)}
+function learnPools(){
+ const all=cards(S.sec).filter(c=>SRS.st(c.ck)<2);
+ const rec=[],cur=[],fresh=[];
+ all.forEach(c=>{const r=SRS.r(c.ck);
+  if(SRS.st(c.ck)===1)rec.push(c);
+  else if(r&&(r.k||0)>0)cur.push(c);
+  else fresh.push(c)});
+ rec.sort(byW);cur.sort(byW);fresh.sort(byW);
+ const B=S.batch;
+ const recAct=rec.slice(0,B);
+ let newAct=cur.slice(0,B);
+ if(newAct.length<B)newAct=newAct.concat(fresh.slice(0,B-newAct.length));
+ return {recAct,newAct,restRec:Math.max(0,rec.length-B),restNew:fresh.length-Math.max(0,B-cur.length),total:all.length};
+}
+function buildLearn(){
+ const p=learnPools();
+ let q=p.recAct.concat(p.newAct);
+ if(S.ord==="rnd")q=shuf(p.recAct.slice()).concat(shuf(p.newAct.slice()));
+ else q.sort(byW);
+ S.lq=q;S.pool=p;
+}
+function buildPrac(){
+ const t=SRS.t();
+ let q=cards(S.sec).filter(c=>{const r=SRS.r(c.ck);return r&&SRS.st(c.ck)>=2&&r.d<=t});
+ if(S.ord==="rnd")shuf(q);else q.sort(byW);
+ S.pq=q;
+}
+/* Повторение: все карточки в практике (st>=2), без фильтра по сроку и без круга */
+function buildReview(){
+ let q=cards(S.sec).filter(c=>SRS.st(c.ck)>=2);
+ if(S.ord==="rnd")shuf(q);else q.sort(byW);
+ S.rq=q;
+}
+
+/* ===== fuzzy match (свободный ввод, без вариантов) ===== */
+const STOP=new Set(["и","в","на","с","со","из","за","по","от","до","у","о","об","к","то","что","как","же",
+ "не","ни","а","но","или","это","его","её","ее","их","он","она","оно","они","вы","вас","вам","предмет","образ"]);
+/* nrm for free-text images: strip punctuation but keep letters, digits, spaces, hyphens, umlauts */
+function nrm(s){return (s||"").toLowerCase().replace(/ё/g,"е").replace(/[^0-9a-zа-яäöüß\s-]/gi," ").replace(/\s+/g," ").trim()}
+/* nrm for morphemes: keep ¨ ∅ / - and letters; drop periods (optional to type) and collapse whitespace */
+function nrmMorph(s){return (s||"").toLowerCase().replace(/ё/g,"е").replace(/\./g,"").replace(/\s+/g," ").trim()}
+/* typable stand-ins for symbols that don't exist on a regular keyboard:
+   ¨ (umlaut mark) and ∅ (empty set / "no ending") — used for whole-answer grammar checks */
+function canonSpecial(s){
+ let t=nrmMorph(s);
+ t=t.replace(/умлаут|умляут|\*\*|''|"/gi,"¨");
+ /* ∅: 0, -0, -, нуль, пусто, без изменения */
+ t=t.replace(/без\s*изменен[а-я]*|нулев[а-я]*|нуль|нет\s*измен[а-я]*|пусто/gi,"∅");
+ t=t.replace(/-\s*0\b|\b0\b|-\s*$/g,"∅");
+ t=t.replace(/-\s*∅/g,"∅");
+ t=t.replace(/мн\s*[.:]?/g,"мн ");
+ t=t.replace(/,\s*/g,", ");
+ return t.replace(/\s+/g," ").trim();
+}
+function morphShape(s){
+ s=nrmMorph(s);
+ return (s.startsWith("-")?"L":"")+(s.endsWith("-")?"R":"");
+}
+function morphParts(s){
+ return nrmMorph(s).split(/\s*\/\s*|\s+или\s+/).map(x=>x.trim()).filter(Boolean);
+}
+function stem(w){
+ w=w.replace(/^-+|-+$/g,"");
+ if(w.length<5)return w;
+ return w.replace(/(ями|ами|иями|ует|уют|ется|ются|ится|ятся|ать|ять|ить|еть|ыми|ими|ого|его|ому|ему|ая|яя|ое|ее|ые|ие|ый|ий|ой|ем|ам|ом|ах|ях|ов|ев|их|ых|ся|ть|а|я|ы|и|е|о|у|ю|ь)$/,"");
+}
+function lev(a,b){
+ if(Math.abs(a.length-b.length)>3)return 9;
+ const m=a.length,n=b.length,d=new Array(n+1);
+ for(let j=0;j<=n;j++)d[j]=j;
+ for(let i=1;i<=m;i++){let prev=d[0];d[0]=i;
+  for(let j=1;j<=n;j++){const tmp=d[j];
+   d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=tmp}}
+ return d[n];
+}
+function toks(s){return nrm(s).split(" ").filter(w=>w.length>2&&!STOP.has(w)).map(stem)}
+/* Only whitespace-separated parentheses are explanatory notes.
+   Inline parentheses are part of the morpheme: -(e)n must stay -(e)n. */
+/* set of all other morpheme strings (for near-check) — built once */
+const ALL_Q=new Set();
+IDX.forEach(r=>{
+ const raw=nrmMorph(r.it.q);
+ raw.split(/\s*\/\s*|\s*,\s*|\s+или\s+/).forEach(p=>{
+  const t=p.replace(/\s+\([^()]*\)/g,"").trim();
+  if(t)ALL_Q.add(t);
+  const bare=t.replace(/^-+|-+$/g,"").trim();
+  if(bare&&bare!==t)ALL_Q.add(bare);
+ });
+});
+/* returns 0 нет · 1 близко · 2 верно */
+function grade(card,user){
+ const rawUser=(user||"").trim();
+ if(!rawUser)return 0;
+ const u=nrm(rawUser);
+ const um=nrmMorph(rawUser);
+ /* An exact match to the displayed answer is always correct, before fuzzy
+    matching or removing explanatory notes. Parentheses can be meaningful. */
+ const expected=card.side==="rev"?card.it.q:card.it.a;
+ if(um===nrmMorph(expected))return 2;
+ const ut=toks(rawUser);
+
+ /* Cards with the same prompt can legitimately have several correct answers.
+    In reverse mode, accept every morpheme attached to the same image. */
+ const samePrompt=nrmMorph(card.it.a);
+const isGrammarAnswer=/^(?:der|die|das)\b.*(?:мн\.|склонение)/i.test(samePrompt);
+const peers=IDX.filter(r=>r.it===card.it || (!isGrammarAnswer&&nrmMorph(r.it.a)===samePrompt));
+ if(card.side==="rev"){
+  const targets=[];
+  peers.forEach(r=>morphParts(r.it.q).forEach(p=>{if(!targets.includes(p))targets.push(p)}));
+  /* Keyboard aliases for the standalone empty ending, not for other morphemes.
+     Check before fuzzy matching so 0 / -0 receive a fully correct grade. */
+  if(/^-?\s*0$/.test(um) &&
+     targets.some(t=>t.replace(/\s+\([^()]*\)/g,"").trim()==="∅"))return 2;
+  for(const p0 of targets){
+   const p=p0.replace(/\s+\([^()]*\)/g,"").trim();
+   if(!p)continue;
+   const pNorm=nrmMorph(p), pCompact=pNorm.replace(/\s+/g,"");
+   const uCompact=um.replace(/\s+/g,"");
+   const umNorm=um.replace(/(\*\*|''|")/g,"¨");
+   const uNormCompact=umNorm.replace(/\s+/g,"");
+   if(um===pNorm||umNorm===pNorm||uCompact===pCompact||uNormCompact===pCompact)return 2;
+
+   /* Fuzzy matching must preserve morpheme position:
+      -er is not er-, and a bare word is not a prefix/suffix. */
+   const pBare=pNorm.replace(/^-+|-+$/g,"");
+   const uBare=umNorm.replace(/^-+|-+$/g,"");
+   if(morphShape(umNorm)!==morphShape(pNorm))continue;
+   if(pBare.length>=2&&lev(uBare,pBare)<=1){
+    if(ALL_Q.has(um)||ALL_Q.has(umNorm)||ALL_Q.has(uBare)||ALL_Q.has(uCompact)){
+     continue;
+    }
+    return 1;
+   }
+  }
+  /* Human-readable aliases for symbols that are awkward to type. */
+  if(/∅|без\s*изменен|нулев|нуль|нет\s*измен|пусто/i.test(rawUser) &&
+     targets.some(t=>/∅|без\s*изменен/.test(t)))return 2;
+  if(/умлаут|¨|умляут|\*\*|''|"/i.test(rawUser) &&
+     targets.some(t=>/¨|умлаут/.test(t)))return 2;
+  return 0;
+ }
+
+ /* Forward mode: aggregate acceptable descriptions/keys for duplicate prompts. */
+ const peerItems=peers.map(r=>r.it);
+ const acc=[...new Set(peerItems.flatMap(it=>(it.acc||[]).map(nrm)).filter(a=>a&&a.length>=2))];
+
+ /* Grammar answers: "die, мн. -en" / "der, мн. ∅"
+    period optional; ∅ = 0, -0, -, нуль, пусто, без изменения */
+ const hasPluralPattern=peerItems.some(it=>/,\s*мн\.?/i.test(it.a));
+ if(hasPluralPattern){
+  const uCanon=canonSpecial(rawUser);
+  for(const it of peerItems){
+   if(/,\s*мн\.?/i.test(it.a) && uCanon===canonSpecial(it.a))return 2;
+  }
+  for(const it of peerItems){
+   if(!/,\s*мн\.?/i.test(it.a))continue;
+   const art=(it.a.match(/^(der|die|das)/i)||[])[1];
+   if(!art || !new RegExp("^"+art+"\\b","i").test(uCanon))continue;
+   const targetEnd=canonSpecial(it.a).replace(/^(der|die|das)\s*,?\s*мн\s*/i,"").trim();
+   const userEnd=uCanon.replace(/^(der|die|das)\s*,?\s*мн\s*/i,"").trim();
+   if(targetEnd===userEnd)return 2;
+   const emptyish=/^(∅|-)?$/;
+   if(emptyish.test(targetEnd)&&emptyish.test(userEnd))return 2;
+   if(targetEnd&&userEnd&&(targetEnd.indexOf(userEnd)>=0||userEnd.indexOf(targetEnd)>=0))return 2;
+  }
+  return 0;
+ }
+
+ /* Keyword hits from acc — short keys match as whole tokens */
+ let accHits=0;
+ const hitWords=new Set();
+ for(const a of acc){
+  if(a.length>=3&&u.indexOf(a)>=0){accHits+=2;hitWords.add(a);continue}
+  const esc=a.replace(/[\\^$*+?.()|[\]{}]/g,"\\$&");
+  const re=new RegExp("(^|\\s)"+esc+"(?=\\s|$|-)","i");
+  if(re.test(u)){accHits+=2;hitWords.add(a)}
+ }
+ for(const a of acc){
+  if(hitWords.has(a))continue;
+  const as=stem(a);
+  if(as.length<3)continue;
+  for(const w of ut){
+   if(w===as||(w.length>=3&&(w.indexOf(as)===0||as.indexOf(w)===0||lev(w,as)<=1))){
+    accHits++;hitWords.add(a);break;
+   }
+  }
+ }
+ if(accHits>=2)return 2;
+ if(accHits>=1)return 1;
+
+ /* Semantic paraphrase: overlap with image description + acc stems */
+ const semantic=[...new Set(peerItems.flatMap(it=>{
+  return toks(it.a).concat((it.acc||[]).map(x=>stem(nrm(x))).filter(x=>x.length>=3));
+ }))];
+ if(semantic.length){
+  let hit=0;
+  const used=new Set();
+  for(const t of semantic){
+   if(t.length<3)continue;
+   for(const w of ut){
+    if(used.has(w))continue;
+    if(w===t||(t.length>=3&&w.length>=3&&(lev(w,t)<=1||w.indexOf(t)===0||t.indexOf(w)===0))){
+     hit++;used.add(w);break;
+    }
+   }
+  }
+  const ratio=hit/Math.max(semantic.length,1);
+  if(ratio>=0.4||hit>=2)return 2;
+  if(hit>=1)return 1;
+ }
+ return 0;
+}
+function esc(s){return (s+"").replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]))}
+
+/* ===== nav / opts ===== */
+const VIEWS=[["learn","Обучение"],["practice","Практика"],["review","Повторение"],["theory","Теория"]];
+function drawViews(){
+ const ul=document.getElementById("viewNav");ul.innerHTML="";
+ VIEWS.forEach(([id,name])=>{
+  let n="";
+  if(id==="learn")n=S.lq.length+(S.lc?1:0);
+  if(id==="practice"){n=S.pq.length+(S.pc?1:0);if(!n)return}
+  if(id==="review"){n=S.rq.length+(S.rc?1:0);if(!n)return}
+  const li=document.createElement("li");
+  li.innerHTML='<button class="sbtn'+(S.tab===id?" on":"")+'" onclick="view(\''+id+'\')">'
+   +'<span class="sbtn-row"><b>'+name+'</b>'+(n!==""?'<span class="sbtn-n">'+n+'</span>':'')+'</span></button>';
+  ul.appendChild(li);
+ });
+ const li=document.createElement("li");
+ li.className="only-nar";
+ li.innerHTML='<button class="sbtn'+(S.tab==="stats"?" on":"")+'" onclick="view(\'stats\')">'
+  +'<span class="sbtn-row"><b>Статистика</b></span></button>';
+ ul.appendChild(li);
+}
+/* вклад одной карточки в прогресс раздела: 0 → 1
+   знакомство 0…0.25 · узнавание 0.25…0.60 · практика 0.60…1 */
+function share(ck){
+ const r=SRS.r(ck); if(!r)return 0;
+ const k=r.k||0, b=r.b||0, st=SRS.st(ck);
+ if(st>=2)return 0.6+0.4*Math.min(b,3)/3;
+ if(st>=1)return 0.25+0.35*Math.min(k-T1,T2-T1)/(T2-T1);
+ return 0.25*Math.min(k,T1)/T1;
+}
+function secPct(sec){
+ /* Progress is measured per morpheme, not per rendered card. */
+ const byKey=new Map();
+ cards(sec).forEach(c=>{
+  const v=share(c.ck),prev=byKey.get(c.key);
+  byKey.set(c.key,prev===undefined?v:Math.max(prev,v));
+ });
+ if(!byKey.size)return 0;
+ let s=0;byKey.forEach(v=>s+=v);
+ return Math.round(s/byKey.size*100);
+}
+function drawNav(){
+ drawViews();
+ const ul=document.getElementById("snav");ul.innerHTML="";
+ NAV.forEach(s=>{
+  const cs=cards(s.id);
+  const pct=secPct(s.id);
+  const li=document.createElement("li");
+  li.innerHTML='<button class="sbtn'+(s.id===S.sec?" on":"")+'" onclick="setSec(\''+s.id+'\')">'
+   +'<span class="sbtn-row"><b>'+s.title+'</b><span class="sbtn-n">'+pct+'%</span></span>'
+   +'<span class="sbar"><i style="width:'+pct+'%"></i></span></button>';
+  ul.appendChild(li);
+ });
+}
+function syncOpt(){
+ [["segDir",S.dir],["segOrd",S.ord],["segSide",S.side],["segBatch",String(S.batch)]].forEach(([id,v])=>
+  document.querySelectorAll("#"+id+" button").forEach(b=>b.classList.toggle("on",b.dataset.v===v)));
+ const one=IDX.filter(r=>!r.bi).length;
+ document.getElementById("hDir").textContent=S.dir==="two"
+  ?"Обратимые морфемы дают две карточки. "+one+" позиций спрашиваются только вперёд: обратное направление у них неоднозначно."
+  :"Одна карточка на морфему.";
+ document.getElementById("sideWrap").style.display=S.dir==="two"?"none":"block";
+ const mn=document.getElementById("modeNow");
+ if(mn)mn.textContent=(S.dir==="two"?"2 стороны":"1 сторона")+" · круг "+S.batch;
+}
+function opt(k,v){S[k]=v;store.set(k,v);syncOpt();refreshAll()}
+let POP=null;
+function pop(id,anchor){
+ const el=document.getElementById("pop-"+id);if(!el)return;
+ if(POP===el){closePop();return} /* toggle (BUG-31) */
+ closePop();
+ el.classList.add("on");document.getElementById("popBd").classList.add("on");POP=el;
+ const lb=document.getElementById("linkBox");if(lb&&id==="store"){lb.style.display="none";linkStatus("",true)}
+ if(window.innerWidth>900){
+  const r=anchor?anchor.getBoundingClientRect():{left:20,bottom:60};
+  el.style.top=(r.bottom+8)+"px";
+  el.style.left=Math.max(12,Math.min(r.left,window.innerWidth-350))+"px";
+ }else{el.style.top="";el.style.left=""}
+ document.body.classList.remove("nav");
+}
+function closePop(){
+ if(POP){POP.classList.remove("on");POP=null}
+ document.getElementById("popBd").classList.remove("on");
+}
+function setSec(id){S.sec=id;store.set("sec",id);closePop();document.body.classList.remove("nav");refreshAll()}
+function view(t){
+ if(t==="practice"&&!S.pq.length&&!S.pc){
+  /* give feedback instead of silent fail (BUG-21) */
+  if(S.tab!=="practice")alert("Практика пока пуста. Карточки появятся после обучения (или завтра, если только что выпущены).");
+  return;
+ }
+ if(t==="review"&&!S.rq.length&&!S.rc){
+  if(S.tab!=="review")alert("Повторение пока пусто. Карточки появятся, когда хотя бы одна дойдёт до практики.");
+  return;
+ }
+ S.tab=t;store.set("view",t);closePop();
+ document.body.classList.remove("nav");
+ ["learn","practice","review","theory","stats"].forEach(k=>
+  document.getElementById("p-"+k).classList.toggle("on",k===t));
+ document.getElementById("tb-stats").classList.toggle("on",t==="stats");
+ drawViews();
+ if(t==="stats")drawStats();
+ if(t==="theory")drawTheory();
+ if(t==="practice")setTimeout(()=>document.getElementById("ans").focus(),60);
+ if(t==="review")setTimeout(()=>document.getElementById("rans").focus(),60);
+}
+const tab=view;
+function refreshAll(){
+ document.getElementById("hdSub").textContent=NAV.find(x=>x.id===S.sec).title;
+ buildLearn();nextLearn();buildPrac();nextPrac();buildReview();nextReview();drawNav();drawTheory();drawStats();syncOpt();
+ if(S.tab==="practice"&&!S.pq.length&&!S.pc)S.tab="learn";
+ if(S.tab==="review"&&!S.rq.length&&!S.rc)S.tab="learn";
+ ["learn","practice","review","theory","stats"].forEach(k=>
+  document.getElementById("p-"+k).classList.toggle("on",k===S.tab));
+ document.getElementById("tb-stats").classList.toggle("on",S.tab==="stats");
+}
+function drawBadges(){drawViews()}
+
+/* ===== LEARN: 3 ступени ===== */
+function nextLearn(){
+ document.getElementById("lRev").innerHTML="";
+ S.lshown=false;
+ const card=document.getElementById("lCard");
+ if(!S.lq.length){
+  S.lc=null;
+  document.getElementById("lStage").textContent="";document.getElementById("lTag").textContent="";
+  document.getElementById("lQ").innerHTML='<span style="font-size:1.05rem;color:var(--tx3)">Обучение раздела пройдено. Дальше работает практика (карточки доступны сразу).</span>';
+   document.getElementById("lActs").innerHTML='<button class="btn" onclick="buildPrac();view(\'practice\')">Перейти к практике</button>';
+  card.className="qcard";updLearn();return;
+ }
+ S.lc=popNext(S.lq);markRecent(S.lc.ck);
+ const c=S.lc,st=SRS.st(c.ck);
+ card.className="qcard s"+st;
+ const kn=(SRS.r(c.ck)||{k:0}).k||0;
+ document.getElementById("lStage").className="tagp "+(st===0?"st":"st1");
+ document.getElementById("lStage").textContent=(st===0?"Знакомство":"Узнавание")+" "+kn+"/"+(st===0?T1:T2);
+ document.getElementById("lTag").textContent="";
+ document.getElementById("lAsk").textContent=c.side==="fwd"?c.ask:c.askRev;
+ document.getElementById("lQ").textContent=c.side==="fwd"?c.it.q:c.it.a;
+ const k=SRS.r(c.ck);
+ document.getElementById("lActs").innerHTML= st===0
+  ? '<button class="btn pri" onclick="lShow()">Показать</button><button class="btn" onclick="lSkip()">Пропустить</button>'
+  : '<button class="btn pri" onclick="lShow()">Показать ответ</button><button class="btn" onclick="lSkip()">Пропустить</button>';
+ card.style.animation="none";void card.offsetWidth;card.style.animation="";
+ updLearn();drawBadges();drawNav();
+}
+function lShow(){
+ const c=S.lc;if(!c||S.lshown)return;
+ S.lshown=true;
+ const st=SRS.st(c.ck);
+ const front=c.side==="fwd"?c.it.q:c.it.a, back=c.side==="fwd"?c.it.a:c.it.q;
+ let h='<div class="rev"><div class="ans">'+esc(back)+'</div>';
+ if(c.it.n&&c.it.n!==c.it.e)h+='<div class="nt">'+esc(c.it.n)+'</div>';
+ if(c.it.e)h+='<div class="ex">'+esc(c.it.e)+'</div>';
+ h+='</div>';
+ document.getElementById("lRev").innerHTML=h;
+ document.getElementById("lTag").textContent=(S.sec==="all"?c.secT+" · ":"")+c.grp;
+ document.getElementById("lActs").innerHTML=
+   '<button class="btn yes" onclick="lGrade(true)">Знал</button>'
+  +'<button class="btn no" onclick="lGrade(false)">Не знал</button>';
+}
+function lGrade(ok){
+ const c=S.lc;if(!c||ANIM_LOCK)return;
+ ANIM_LOCK=true;
+ const r=SRS.selfGrade(c.ck,ok);
+ bump(c.sec,ok);
+ const el=document.getElementById("lStage");
+ const st=r.st,goal=st>=1?T2:T1;
+ el.className="tagp";void el.offsetWidth;
+ if(r.st>=2){el.classList.add("grad");el.textContent="В практику"}
+ else{
+  el.classList.add(st===0?"st":"st1",ok?"bump-ok":"bump-no");
+  el.textContent=(st===0?"Знакомство":"Узнавание")+" "+r.k+"/"+goal;
+ }
+ document.getElementById("lActs").innerHTML="";
+ if(r.st<2)reinsert(S.lq,c,ok);
+ else S.lq=S.lq.filter(x=>x.ck!==c.ck);
+ setTimeout(()=>{ANIM_LOCK=false;if(!S.lq.length)buildLearn();nextLearn();drawNav()},r.st>=2?620:460);
+}
+function lSkip(){ if(ANIM_LOCK)return; if(S.lc)reinsert(S.lq,S.lc,false); nextLearn(); }
+function buildLearnKeep(){/* очередь не пересобираем, чтобы не терять место */}
+function updLearn(){
+ const cs=cards(S.sec);
+ const n1=cs.filter(c=>SRS.st(c.ck)===1).length,
+       n2=cs.filter(c=>SRS.st(c.ck)>=2).length;
+ document.getElementById("lBar").style.width=secPct(S.sec)+"%";
+ document.getElementById("lMeta").textContent="в практике "+n2+" из "+cs.length+" · узнавание "+n1+" · в круге "+(S.lq.length+(S.lc?1:0));
+}
+
+/* ===== PRACTICE: свободный ввод ===== */
+function nextPrac(){
+ document.getElementById("pVerdict").innerHTML="";S.pans=false;S.pforce=false;
+ const card=document.getElementById("pCard");card.className="qcard s2";
+ const inp=document.getElementById("ans");
+ /* restore button labels */
+ const btns=document.querySelectorAll("#p-practice .acts .btn");
+ if(btns[0])btns[0].textContent="Ответить";
+ if(btns[1])btns[1].textContent="Не помню";
+ if(!S.pq.length){
+  buildPrac();
+  if(!S.pq.length){
+   S.pc=null;inp.disabled=true;updPrac();drawViews();
+   if(S.tab==="practice")view("learn");
+   return;
+  }
+ }
+ S.pc=popNext(S.pq);markRecent(S.pc.ck);const c=S.pc;
+ document.getElementById("pTag").textContent="";
+ document.getElementById("pAsk").textContent=c.side==="fwd"?c.ask:c.askRev;
+ document.getElementById("pQ").textContent=c.side==="fwd"?c.it.q:c.it.a;
+ document.getElementById("pDir").textContent=""; /* avoid duplicate with pAsk (BUG-24) */
+ inp.disabled=false;inp.value="";inp.placeholder=c.side==="fwd"?c.ask+" своими словами":c.askRev;
+ inp.focus();card.style.animation="none";void card.offsetWidth;card.style.animation="";
+ updPrac();drawBadges();
+}
+function pVerdict(g,c,user,allowForce){
+ const right=c.side==="fwd"?c.it.a:c.it.q;
+ const cls=g===2?"ok":(g===1?"near":"no");
+ let h='<div class="vd '+cls+'"><h4>'+(g===2?"Верно":(g===1?"Почти":"Мимо"))+'</h4>';
+ if(g===2)h+='<div>'+esc(right)+'</div>';
+ else{
+  if(user)h+='<div>Ваш ответ: '+esc(user)+'</div>';
+  h+='<div>Эталон: <span class="cor">'+esc(right)+'</span></div>';
+  if(g===1)h+='<small>Принято по смыслу (формулировка близка к эталону).</small>';
+ }
+ if(c.it.n)h+='<small>'+esc(c.it.n)+'</small>';
+ if(c.it.e)h+='<small style="font-style:italic">'+esc(c.it.e)+'</small>';
+ if(g===0&&allowForce)h+='<div class="acts" style="margin-top:11px"><button class="btn sm" onclick="force()">Засчитать верным</button></div>';
+ h+='</div>';
+ document.getElementById("pVerdict").innerHTML=h;
+ document.getElementById("pTag").textContent=(S.sec==="all"?c.secT+" · ":"")+c.grp;
+ document.getElementById("pCard").className="qcard s2 "+(g?"good":"bad");
+}
+function reinsertPractice(c){
+ if(S.pq.length){S.pq.push(c);return}
+ const ck=c.ck,sec=c.sec;
+ setTimeout(()=>{
+  if(S.tab==="practice"&&S.sec===sec&&(!S.pc||S.pc.ck!==ck)){
+   S.pq.push(c);drawViews();updPrac();
+  }
+ },1200);
+}
+function send(){
+ if(S.pans){nextPrac();return}
+ const c=S.pc;if(!c)return;
+ const v=document.getElementById("ans").value;
+ if(!v.trim()){giveUp();return}
+ const g=grade(c,v),ok=g>=1;
+ if(g===1)SES.near++;
+ const r=SRS.answer(c.ck,ok);bump(c.sec,ok);
+ S.pans=true;S.pforce=(g===0);pVerdict(g,c,v,true);
+ if(!ok){
+  if(r.st<2){document.getElementById("pVerdict").insertAdjacentHTML("beforeend",
+   '<div class="tip" style="margin-top:10px">Три срыва подряд — карточка вернулась в обучение. Это сигнал переделать образ, а не повторять его снова.</div>')}
+  else reinsertPractice(c); /* never show a failed card immediately */
+ }
+ const inp=document.getElementById("ans");inp.value="";inp.placeholder="Enter — дальше";
+ /* update button labels (BUG-25) */
+ document.querySelector("#p-practice .btn.pri").textContent="Дальше";
+ document.querySelector("#p-practice .btn:not(.pri)").textContent="Дальше";
+ updPrac();drawNav();
+}
+function giveUp(){
+ if(S.pans){nextPrac();return}
+ const c=S.pc;if(!c)return;
+ const r=SRS.answer(c.ck,false);bump(c.sec,false);
+ S.pans=true;S.pforce=false;pVerdict(0,c,"",false);
+ if(r.st<2)document.getElementById("pVerdict").insertAdjacentHTML("beforeend",
+  '<div class="tip" style="margin-top:10px">Карточка вернулась в обучение.</div>');
+ else reinsertPractice(c);
+ const inp=document.getElementById("ans");inp.value="";inp.placeholder="Enter — дальше";
+ document.querySelector("#p-practice .btn.pri").textContent="Дальше";
+ document.querySelector("#p-practice .btn:not(.pri)").textContent="Дальше";
+ updPrac();drawNav();
+}
+function force(){
+ const c=S.pc;if(!c||!S.pans||!S.pforce)return;
+ S.pforce=false;
+ const p=SRS.r(c.ck)||{l:1};
+ SRS.d[c.ck]={st:2,k:2,b:Math.max(1,p.b||1),l:Math.max(0,(p.l||1)-1),d:SRS.t()};SRS.save();
+ SES.ok++;SES.str++;SES.best=Math.max(SES.best,SES.str);
+ const b=SES.by[c.sec];if(b)b.o++;drawStreak();
+ pVerdict(2,c,"");updPrac();drawNav();
+}
+function updPrac(){
+ const cs=cards(S.sec),done=cs.filter(c=>{const r=SRS.r(c.ck);return r&&r.b>=3}).length;
+ document.getElementById("pBar").style.width=secPct(S.sec)+"%";
+ document.getElementById("pMeta").textContent="выучено "+done+" из "+cs.length+" · в очереди "+(S.pq.length+(S.pc?1:0));
+}
+
+/* ===== REVIEW: все карточки в практике, без круга и без фильтра по сроку ===== */
+function nextReview(){
+ document.getElementById("rVerdict").innerHTML="";S.rans=false;S.rforce=false;
+ const card=document.getElementById("rCard");card.className="qcard s2";
+ const inp=document.getElementById("rans");
+ const btns=document.querySelectorAll("#p-review .acts .btn");
+ if(btns[0])btns[0].textContent="Ответить";
+ if(btns[1])btns[1].textContent="Не помню";
+ if(!S.rq.length){
+  buildReview();
+  if(!S.rq.length){
+   S.rc=null;inp.disabled=true;updReview();drawViews();
+   if(S.tab==="review")view("learn");
+   return;
+  }
+ }
+ S.rc=popNext(S.rq);markRecent(S.rc.ck);const c=S.rc;
+ document.getElementById("rTag").textContent="";
+ document.getElementById("rAsk").textContent=c.side==="fwd"?c.ask:c.askRev;
+ document.getElementById("rQ").textContent=c.side==="fwd"?c.it.q:c.it.a;
+ document.getElementById("rDir").textContent="";
+ inp.disabled=false;inp.value="";inp.placeholder=c.side==="fwd"?c.ask+" своими словами":c.askRev;
+ inp.focus();card.style.animation="none";void card.offsetWidth;card.style.animation="";
+ updReview();drawBadges();
+}
+function rVerdict(g,c,user,allowForce){
+ const right=c.side==="fwd"?c.it.a:c.it.q;
+ const cls=g===2?"ok":(g===1?"near":"no");
+ let h='<div class="vd '+cls+'"><h4>'+(g===2?"Верно":(g===1?"Почти":"Мимо"))+'</h4>';
+ if(g===2)h+='<div>'+esc(right)+'</div>';
+ else{
+  if(user)h+='<div>Ваш ответ: '+esc(user)+'</div>';
+  h+='<div>Эталон: <span class="cor">'+esc(right)+'</span></div>';
+  if(g===1)h+='<small>Принято по смыслу (формулировка близка к эталону).</small>';
+ }
+ if(c.it.n)h+='<small>'+esc(c.it.n)+'</small>';
+ if(c.it.e)h+='<small style="font-style:italic">'+esc(c.it.e)+'</small>';
+ if(g===0&&allowForce)h+='<div class="acts" style="margin-top:11px"><button class="btn sm" onclick="rForce()">Засчитать верным</button></div>';
+ h+='</div>';
+ document.getElementById("rVerdict").innerHTML=h;
+ document.getElementById("rTag").textContent=(S.sec==="all"?c.secT+" · ":"")+c.grp;
+ document.getElementById("rCard").className="qcard s2 "+(g?"good":"bad");
+}
+function reinsertReview(c){
+ if(S.rq.length){S.rq.push(c);return}
+ const ck=c.ck,sec=c.sec;
+ setTimeout(()=>{
+  if(S.tab==="review"&&S.sec===sec&&(!S.rc||S.rc.ck!==ck)){
+   S.rq.push(c);drawViews();updReview();
+  }
+ },1200);
+}
+function rSend(){
+ if(S.rans){nextReview();return}
+ const c=S.rc;if(!c)return;
+ const v=document.getElementById("rans").value;
+ if(!v.trim()){rGiveUp();return}
+ const g=grade(c,v),ok=g>=1;
+ if(g===1)SES.near++;
+ const r=SRS.answer(c.ck,ok);bump(c.sec,ok);
+ S.rans=true;S.rforce=(g===0);rVerdict(g,c,v,true);
+ if(!ok){
+  if(r.st<2){document.getElementById("rVerdict").insertAdjacentHTML("beforeend",
+   '<div class="tip" style="margin-top:10px">Три срыва подряд — карточка вернулась в обучение. Это сигнал переделать образ, а не повторять его снова.</div>')}
+  else reinsertReview(c);
+ }
+ const inp=document.getElementById("rans");inp.value="";inp.placeholder="Enter — дальше";
+ document.querySelector("#p-review .btn.pri").textContent="Дальше";
+ document.querySelector("#p-review .btn:not(.pri)").textContent="Дальше";
+ updReview();drawNav();
+}
+function rGiveUp(){
+ if(S.rans){nextReview();return}
+ const c=S.rc;if(!c)return;
+ const r=SRS.answer(c.ck,false);bump(c.sec,false);
+ S.rans=true;S.rforce=false;rVerdict(0,c,"",false);
+ if(r.st<2)document.getElementById("rVerdict").insertAdjacentHTML("beforeend",
+  '<div class="tip" style="margin-top:10px">Карточка вернулась в обучение.</div>');
+ else reinsertReview(c);
+ const inp=document.getElementById("rans");inp.value="";inp.placeholder="Enter — дальше";
+ document.querySelector("#p-review .btn.pri").textContent="Дальше";
+ document.querySelector("#p-review .btn:not(.pri)").textContent="Дальше";
+ updReview();drawNav();
+}
+function rForce(){
+ const c=S.rc;if(!c||!S.rans||!S.rforce)return;
+ S.rforce=false;
+ const p=SRS.r(c.ck)||{l:1};
+ SRS.d[c.ck]={st:2,k:2,b:Math.max(1,p.b||1),l:Math.max(0,(p.l||1)-1),d:SRS.t()};SRS.save();
+ SES.ok++;SES.str++;SES.best=Math.max(SES.best,SES.str);
+ const b=SES.by[c.sec];if(b)b.o++;drawStreak();
+ rVerdict(2,c,"");updReview();drawNav();
+}
+function updReview(){
+ const cs=cards(S.sec),inPrac=cs.filter(c=>SRS.st(c.ck)>=2).length;
+ document.getElementById("rBar").style.width=secPct(S.sec)+"%";
+ document.getElementById("rMeta").textContent="в практике "+inPrac+" из "+cs.length+" · в очереди "+(S.rq.length+(S.rc?1:0));
+}
+
+/* ===== theory ===== */
+function drawTheory(){
+ const ss=S.sec==="all"?SECTIONS:[SECTIONS.find(x=>x.id===S.sec)];
+ let h="";
+ ss.forEach(s=>{
+  if(S.sec==="all")h+='<h2>'+esc(s.title)+'</h2>';
+  s.groups.forEach(g=>{
+   const c=g.cols||["Морфема","Образ","Примеры"];
+   h+='<div class="blk"><h3>'+esc(g.g)+'</h3>';
+   if(g.about)h+='<div class="tip" style="margin:0 0 12px">'+esc(g.about)+'</div>';
+   h+='<table class="t t3"><tr><th>'+esc(c[0])+'</th><th>'+esc(c[1])+'</th><th>'+esc(c[2])+'</th></tr>';
+   g.items.forEach(it=>{h+='<tr><td>'+esc(it.q)+'</td><td>'+esc(it.a)
+    +(it.n&&it.n!==it.e?'<span class="s">'+esc(it.n)+'</span>':'')+'</td><td class="ex3">'+esc(it.e||"—")+'</td></tr>'});
+   h+='</table></div>';
+  });
+ });
+ document.getElementById("p-theory").innerHTML=h;
+}
+
+/* ===== stats ===== */
+function stStats(sec){
+ const cs=cards(sec),t=SRS.t();
+ let started=0,learned=0,due=0,lap=0,s0=0,s1=0,s2=0;
+ const boxes=new Array(BOX.length).fill(0);
+ cs.forEach(c=>{const r=SRS.r(c.ck);
+  if(!r){s0++;return}
+  started++;lap+=r.l||0;
+  if(r.st>=2){s2++;boxes[r.b]++;if(r.d<=t)due++}else if(r.st===1)s1++;else s0++;
+  if(r.b>=3)learned++;});
+ return {total:cs.length,started,learned,due,lap,boxes,s0,s1,s2};
+}
+function drawStats(){
+ const acc=SES.ans?Math.round(SES.ok/SES.ans*100):0;
+ let h='<div class="blk"><h3>Текущая сессия</h3><div class="cards">'
+  +mc(SES.ans,"ответов")+mc(acc+"%","точность",acc>=80?"g":(acc<60&&SES.ans>4?"r":""))
+  +mc(SES.best,"серия","v")+mc(dur(SES.act),"активное время")
+  +mc(SES.intro,"знакомств")+mc(SES.rec,"дошло до узнавания")
+  +mc(SES.grad,"ушло в практику","a")+mc(SES.learn,"выучено","g")+'</div>';
+ if(SES.demo)h+='<div class="tip dg">Возвращено в обучение за сессию: '+SES.demo+'. Эти образы стоит переделать.</div>';
+ const ks=Object.keys(SES.by);
+ if(ks.length){
+  h+='<table class="t n"><tr><th>Раздел</th><th>Ответов</th><th>Верно</th><th>Точность</th></tr>';
+  ks.forEach(k=>{const s=SES.by[k],ti=SECTIONS.find(x=>x.id===k);
+   h+='<tr><td>'+esc(ti?ti.title:k)+'</td><td>'+s.a+'</td><td>'+s.o+'</td><td>'+Math.round(s.o/s.a*100)+'%</td></tr>'});
+  h+='</table>';
+ } else h+='<div class="tip">Ответов ещё не было.</div>';
+ h+='</div>';
+
+ h+='<div class="blk"><h3>По частям речи</h3><table class="t n">'
+  +'<tr><th>Раздел</th><th>Всего</th><th>Новых</th><th>Узнавание</th><th>Практика</th><th>Выучено</th><th>Повтор</th><th>Срывов</th></tr>';
+ const T={total:0,s0:0,s1:0,s2:0,learned:0,due:0,lap:0};
+ SECTIONS.forEach(s=>{const q=stStats(s.id);
+  ["total","s0","s1","s2","learned","due","lap"].forEach(k=>T[k]+=q[k]);
+  h+='<tr><td>'+esc(s.title)+'</td><td>'+q.total+'</td><td>'+q.s0+'</td><td>'+q.s1+'</td><td>'+q.s2
+   +'</td><td>'+q.learned+'</td><td>'+q.due+'</td><td'+(q.lap>15?' class="dg"':'')+'>'+q.lap+'</td></tr>'});
+ h+='<tr style="font-weight:650"><td>Итого</td><td>'+T.total+'</td><td>'+T.s0+'</td><td>'+T.s1+'</td><td>'+T.s2
+  +'</td><td>'+T.learned+'</td><td>'+T.due+'</td><td>'+T.lap+'</td></tr></table>'
+  +'<div class="tip">Столбцы «новых → узнавание → практика» показывают движение по ступеням. Карточка доходит до практики после '+T2+' самооценок «Знал» (счётчик уменьшается при «Не знал», но не обнуляется).</div></div>';
+
+ const q=stStats(S.sec),mx=Math.max(1,...q.boxes);
+ h+='<div class="blk"><h3>Расписание повторений — «'+esc(NAV.find(x=>x.id===S.sec).title)+'»</h3>';
+ q.boxes.forEach((n,i)=>{
+  const lbl=i===0?"в тот же день":("через "+BOX[i]+" "+(BOX[i]===1?"день":(BOX[i]<5?"дня":"дней")));
+  h+='<div class="boxrow'+(i>=3?" l":"")+'"><div class="bn">'+i+'</div><div class="bi">'
+   +'<div class="bt">'+lbl+(i>=3?" · выучено":"")+'</div>'
+   +'<div class="bs"><i style="width:'+Math.round(n/mx*100)+'%"></i></div></div>'
+   +'<div class="bc">'+n+'</div></div>';
+ });
+ h+='<div class="tip">Карточка поднимается на коробку выше при верном ответе и падает в нулевую при ошибке. С третьей считается выученной.</div></div>';
+
+ const weak=cards(S.sec).map(c=>({c,r:SRS.r(c.ck)})).filter(x=>x.r&&x.r.l>=2).sort((a,b)=>b.r.l-a.r.l).slice(0,12);
+ if(weak.length){
+  h+='<div class="blk"><h3>Держатся хуже всего</h3><table class="t">';
+  weak.forEach(x=>h+='<tr><td>'+esc(x.c.it.q)+'</td><td>'+esc(x.c.it.a)
+   +'<span class="s">срывов '+x.r.l+' · '+(x.c.side==="fwd"?"морфема → образ":"образ → морфема")+'</span></td></tr>');
+  h+='</table><div class="tip">Три срыва — переделать образ, а не повторять снова.</div></div>';
+ }
+ document.getElementById("p-stats").innerHTML=h;
+}
+function mc(v,l,c){return '<div class="mc"><b class="'+(c||"")+'">'+v+'</b><span>'+l+'</span></div>'}
+
+/* ===== backup ===== */
+function fileSave(){
+ const p={app:"morphemes-trainer",v:2,saved:new Date().toISOString(),data:store.all()};
+ const b=new Blob([JSON.stringify(p,null,1)],{type:"application/json"});
+ const a=document.createElement("a"),d=new Date(),z=n=>String(n).padStart(2,"0");
+ a.href=URL.createObjectURL(b);a.download="morphemes-"+d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+".json";
+ document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},400);
+}
+function fileLoad(inp){
+ const f=inp.files&&inp.files[0];inp.value="";if(!f)return;
+ const r=new FileReader();
+ r.onload=()=>{try{
+  const o=JSON.parse(r.result);if(!o||o.app!=="morphemes-trainer"||!o.data)throw 0;
+  const cur=Object.keys(store.get("srs",{})).length,inc=Object.keys(o.data.srs||{}).length;
+  if(cur&&!confirm("Заменить текущий прогресс ("+cur+") копией из файла ("+inc+")?"))return;
+  /* full replace, not merge (BUG-17) */
+  if(OK_ST){try{const keys=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf(SK)===0)keys.push(k)}keys.forEach(k=>localStorage.removeItem(k))}catch(e){}}
+  else MEM={};
+  Object.keys(o.data).forEach(k=>store.set(k,o.data[k]));reload();alert("Загружено: "+inc+" карточек.");
+ }catch(e){alert("Не похоже на файл этого тренажёра.")}};
+ r.readAsText(f);
+}
+function reload(){
+ SRS.d=store.get("srs",{});
+ S.sec=store.get("sec",S.sec);S.dir=store.get("dir",S.dir);S.ord=store.get("ord",S.ord);S.side=store.get("side",S.side);
+ S.batch=store.get("batch",S.batch);S.tab=store.get("view",S.tab);
+ if(!NAV.some(x=>x.id===S.sec))S.sec="all";
+ saved=store.get("saved",Date.now());refreshAll();drawSaved();
+}
+function b36(n,w){let s=Math.max(0,Math.round(n)).toString(36);while(s.length<w)s="0"+s;return s.slice(-w)}
+function enc(){
+ const t=SRS.t();let o="";
+ Object.keys(SRS.d).forEach(ck=>{
+  const g=C2G[ck];if(g===undefined)return;
+  const r=SRS.d[ck];if(!r)return;
+  /* keep any card that has progress (k, st, b or l). st=0 with k>0 must be saved */
+  if(!(r.k||r.st||r.b||r.l))return;
+  let rel=(r.d||t)-t;rel=Math.max(-499,Math.min(795,rel));
+  /* st 0..2 и k 0..10 в один знак: 2*11+10 = 32 < 36 */
+  const sk=(Math.min(r.st||0,2)*11)+Math.min(r.k||0,10);
+  o+=b36(g,2)+b36(sk,1)+b36(Math.min(r.b||0,35),1)+b36(Math.min(r.l||0,35),1)+b36(rel+500,2);
+ });
+ return "MT3"+o;
+}
+function dec(code){
+ const s=(code||"").replace(/\s+/g,"");
+ const v=s.indexOf("MT3")===0?3:(s.indexOf("MT2")===0?2:0);
+ if(!v)throw 0;
+ const b=s.slice(3);if(b.length%7!==0)throw 0;
+ const t=SRS.t(),o={};let n=0;
+ for(let i=0;i<b.length;i+=7){
+  const g=parseInt(b.slice(i,i+2),36),sk=parseInt(b[i+2],36),
+        st=v===3?Math.floor(sk/11):Math.floor(sk/4),
+        k=v===3?sk%11:sk%4,
+        bx=parseInt(b[i+3],36),l=parseInt(b[i+4],36),rel=parseInt(b.slice(i+5,i+7),36)-500;
+  const ck=G2C[g];if(ck===undefined||[sk,bx,l,rel].some(isNaN))continue;
+  o[ck]={st:Math.min(st,2),k,b:Math.min(bx,BOX.length-1),l,d:t+rel};n++;
+ }
+ if(!n)throw 0;return o;
+}
+const HOME="https://adasdas711.github.io/german-mnemonic/";
+function baseURL(){
+ const p=location.protocol;
+ if(p==="http:"||p==="https:")return location.origin+location.pathname;
+ return HOME;   // открыто из файла — ссылка всё равно ведёт на сайт
+}
+function linkConfig(){
+ return {sec:S.sec,dir:S.dir,ord:S.ord,side:S.side,batch:S.batch,view:S.tab,theme:store.get("theme","dark")};
+}
+function progressURL(){
+ return baseURL()+"#p="+encodeURIComponent(enc())+"&cfg="+encodeURIComponent(JSON.stringify(linkConfig()));
+}
+function applyLinkConfig(cfg){
+ if(!cfg||typeof cfg!=="object")return;
+ if(NAV.some(x=>x.id===cfg.sec))S.sec=cfg.sec;
+ if(cfg.dir==="one"||cfg.dir==="two")S.dir=cfg.dir;
+ if(cfg.ord==="seq"||cfg.ord==="rnd")S.ord=cfg.ord;
+ if(cfg.side==="fwd"||cfg.side==="rev")S.side=cfg.side;
+ if([15,20,25].includes(Number(cfg.batch)))S.batch=Number(cfg.batch);
+ if(["learn","practice","review","theory","stats"].includes(cfg.view))S.tab=cfg.view;
+ if(cfg.theme==="light"||cfg.theme==="dark"){
+ document.documentElement.setAttribute("data-theme",cfg.theme);
+ const cs=document.querySelector('meta[name="color-scheme"]');
+ if(cs)cs.content=cfg.theme==="light"?"light dark":"dark light";
+}
+ ["sec","dir","ord","side","batch","view"].forEach(k=>store.set(k,S[k]));
+ if(cfg.theme==="light"||cfg.theme==="dark")store.set("theme",cfg.theme);
+}
+function linkStatus(s,ok){
+ const el=document.getElementById("linkStatus");
+ if(el){el.textContent=s;el.style.color=ok?"var(--ok)":"var(--warn)"}
+}
+function showLink(url){
+ const box=document.getElementById("linkBox"),ta=document.getElementById("linkField");
+ box.style.display="block";ta.value=url;
+ try{ta.focus();ta.select();ta.setSelectionRange(0,url.length)}catch(e){}
+ return ta;
+}
+function copyField(){
+ const ta=document.getElementById("linkField");
+ if(!ta||!ta.value)return;
+ try{ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length)}catch(e){}
+ let done=false;
+ try{done=document.execCommand&&document.execCommand("copy")}catch(e){done=false}
+ if(done){linkStatus("Ссылка скопирована.",true);return}
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(ta.value)
+   .then(()=>linkStatus("Ссылка скопирована.",true))
+   .catch(()=>linkStatus("Выделите текст и скопируйте вручную.",false));
+ }else linkStatus("Выделите текст и скопируйте вручную.",false);
+}
+function copyLink(){
+ const url=progressURL();
+ if(url.length>4000){linkStatus("Прогресс слишком велик для ссылки — используйте файл.",false);
+  document.getElementById("linkBox").style.display="block";return}
+ showLink(url);
+ let done=false;
+ try{done=document.execCommand&&document.execCommand("copy")}catch(e){done=false}
+ if(done){linkStatus("Ссылка скопирована.",true);return}
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(url)
+   .then(()=>linkStatus("Ссылка скопирована.",true))
+   .catch(()=>linkStatus("Скопировать автоматически не вышло — выделите текст выше и скопируйте вручную.",false));
+ }else linkStatus("Выделите текст выше и скопируйте вручную.",false);
+}
+function shareLink(){
+ const url=progressURL(),n=Object.keys(SRS.d).length;
+ const d=new Date(),z=x=>String(x).padStart(2,"0");
+ if(url.length>4000){copyLink();return}
+ const title="Морфемы · "+z(d.getDate())+"."+z(d.getMonth()+1)+" · карточек: "+n;
+ /* системный шэринг: внутри Telegram открывается свой выбор чата, где доступны темы */
+ if(navigator.share){
+  navigator.share({title:title,text:title,url:url})
+   .then(()=>{linkStatus("Отправлено.",true)})
+   .catch(()=>{showLink(url);linkStatus("Отправка отменена. Ссылку можно скопировать вручную.",false)});
+  return;
+ }
+ let win=null;
+ try{win=window.open("https://t.me/share/url?url="+encodeURIComponent(url)+"&text="+encodeURIComponent(title),"_blank")}catch(e){}
+ if(!win||win.closed||typeof win.closed==="undefined"){
+  showLink(url);
+  linkStatus("Браузер заблокировал новое окно. Скопируйте ссылку и вставьте в нужную тему.",false);
+ }
+}
+const tgLink=shareLink;
+/* автоимпорт из адреса: #p=MT2... */
+function hashImport(){
+ const h=location.hash||"";
+ if(h.indexOf("#p=")!==0)return false;
+ const body=h.slice(3),cut=body.indexOf("&cfg=");
+ const code=cut>=0?body.slice(0,cut):body;
+ const cfgRaw=cut>=0?body.slice(cut+5):"";
+ let o,cfg=null;
+ try{o=dec(decodeURIComponent(code));if(cfgRaw)cfg=JSON.parse(decodeURIComponent(cfgRaw))}catch(e){return false}
+ const cur=Object.keys(SRS.d).length,inc=Object.keys(o).length;
+ const msg=cur?("Ссылка содержит прогресс: "+inc+" карточек.\nВ этом браузере уже есть "+cur+". Заменить?")
+              :("Ссылка содержит прогресс: "+inc+" карточек. Загрузить?");
+ if(!confirm(msg))return false;
+ /* clear hash AFTER confirm so file:// does not throw before dialog */
+ try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+ SRS.d=o;SRS.save();applyLinkConfig(cfg);return true;
+}
+function tgImportOpen(){
+ tab("stats");
+ const h='<div class="blk" id="tgi"><h3>Загрузка из Telegram</h3>'
+  +'<div class="tip" style="margin:0 0 10px">Вставьте код из сообщения. Он начинается с MT3 или MT2.</div>'
+  +'<textarea class="code" id="tgc" placeholder="MT3..."></textarea>'
+  +'<div class="acts" style="margin-top:10px"><button class="btn pri" onclick="tgImport()">Загрузить</button>'
+  +'<button class="btn" onclick="document.getElementById(\'tgi\').remove()">Отмена</button></div></div>';
+ document.getElementById("p-stats").insertAdjacentHTML("afterbegin",h);
+ const ta=document.getElementById("tgc");ta.focus();
+ if(navigator.clipboard&&navigator.clipboard.readText)
+  navigator.clipboard.readText().then(v=>{const p=v&&(v.indexOf("MT3")>=0?v.indexOf("MT3"):v.indexOf("MT2"));if(p>=0)ta.value=v.slice(p).trim()}).catch(()=>{});
+}
+function tgImport(){
+ const v=document.getElementById("tgc").value;let o;
+ const p=v.indexOf("MT3")>=0?v.indexOf("MT3"):v.indexOf("MT2");try{o=dec(v.slice(p))}catch(e){alert("Код не распознан.");return}
+ const cur=Object.keys(SRS.d).length,inc=Object.keys(o).length;
+ if(cur&&!confirm("Заменить текущий прогресс ("+cur+") кодом ("+inc+")?"))return;
+ SRS.d=o;SRS.save();reload();alert("Загружено: "+inc+" карточек.");
+}
+
+/* ===== misc ===== */
+function resetSec(){
+ const t=NAV.find(x=>x.id===S.sec).title;
+ const msg=S.sec==="all"
+  ?"Сбросить прогресс всех разделов? Это удалит весь сохранённый прогресс."
+  :"Сбросить прогресс раздела «"+t+"»?";
+ if(!confirm(msg))return;
+ SRS.reset(S.sec);refreshAll();
+}
+function syncSideOffset(){
+ const hdr=document.querySelector(".hdr"),warnEl=document.getElementById("warnBar");
+ if(!hdr)return;
+ const h=hdr.getBoundingClientRect().height;
+ const w=warnEl&&warnEl.classList.contains("on")?warnEl.getBoundingClientRect().height:0;
+ document.documentElement.style.setProperty("--side-top",Math.ceil(h+w)+"px");
+}
+function nav(){
+ if(window.innerWidth>900)document.body.classList.toggle("slim");
+ else document.body.classList.toggle("nav");
+}
+function theme(){
+ const c=document.documentElement.getAttribute("data-theme"),n=c==="dark"?"light":"dark";
+ document.documentElement.setAttribute("data-theme",n);store.set("theme",n);
+ try{var cs=document.querySelector('meta[name="color-scheme"]');if(cs)cs.content=n==="light"?"light dark":"dark light"}catch(e){}
+}
+/* single keydown handler — prevents Escape from both closing pop and skipping a card */
+let ANIM_LOCK=false; /* blocks input during grade animation (BUG-10) */
+document.addEventListener("keydown",e=>{
+ const inField=e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA";
+ if(e.key==="Escape"){
+  if(POP){closePop();e.preventDefault();return}
+  if(!inField&&S.tab==="learn"&&S.lc&&!ANIM_LOCK){lSkip();e.preventDefault();return}
+  return;
+ }
+ if(e.ctrlKey||e.metaKey||e.altKey)return; /* BUG-19: ignore when modifiers are held */
+ if(inField){
+  if(e.key==="ArrowRight"&&S.tab==="practice"&&S.pans){e.preventDefault();nextPrac()}
+  if(e.key==="ArrowRight"&&S.tab==="review"&&S.rans){e.preventDefault();nextReview()}
+  return;
+ }
+ const m={"1":"learn","2":"practice","3":"review","4":"theory","5":"stats"};
+ if(m[e.key]){e.preventDefault();view(m[e.key]);return}
+ if(e.key==="\\"||e.key==="b"||e.key==="и"||e.key==="B"){e.preventDefault();nav();return}
+ if(ANIM_LOCK)return;
+ if(S.tab==="learn"&&S.lc){
+  if(e.key===" "||e.key==="Enter"){e.preventDefault();
+   if(!S.lshown)lShow();
+   else{const b=document.querySelector("#lActs .yes")||document.querySelector("#lActs .pri");if(b)b.click()}
+   return}
+  if(!S.lshown)return;
+  if(e.key==="ArrowRight"||e.key==="ArrowUp"){e.preventDefault();
+   const b=document.querySelector("#lActs .yes")||document.querySelector("#lActs .pri");if(b)b.click();return}
+  if(e.key==="ArrowLeft"||e.key==="ArrowDown"){e.preventDefault();
+   const b=document.querySelector("#lActs .no");if(b)b.click();return}
+ }
+ if(S.tab==="practice"){
+  if(e.key==="Enter"||e.key===" "||e.key==="ArrowRight"){e.preventDefault();
+   if(S.pans)nextPrac();else document.getElementById("ans").focus();return}
+ }
+ if(S.tab==="review"){
+  if(e.key==="Enter"||e.key===" "||e.key==="ArrowRight"){e.preventDefault();
+   if(S.rans)nextReview();else document.getElementById("rans").focus();return}
+ }
+});
+
+/* theme already applied in <head>; re-sync in case store differs */
+document.documentElement.setAttribute("data-theme",store.get("theme","dark"));
+try{var cs=document.querySelector('meta[name="color-scheme"]');if(cs)cs.content=store.get("theme","dark")==="light"?"light dark":"dark light"}catch(e){}
+try{hashImport()}catch(e){}
+(function(){const b=document.getElementById("shareBtn");
+ if(b&&!navigator.share)b.textContent="Открыть Telegram";})();
+refreshAll();drawSaved();drawStreak();
+if(!OK_ST)warn("Прогресс не сохранится: браузер блокирует хранилище (инкогнито или запрет данных сайта).");
+window.addEventListener("pagehide",()=>{try{SRS.save()}catch(e){}});
+setInterval(()=>{if(S.tab==="stats"&&!document.getElementById("tgi"))drawStats()},30000);
+window.addEventListener("resize",()=>{
+ if(window.innerWidth<=900){
+  document.body.classList.remove("slim");
+ }else{
+  document.body.classList.remove("nav");
+ }
+ syncSideOffset();
+});
+if(window.ResizeObserver){
+ const ro=new ResizeObserver(syncSideOffset);
+ const hdr=document.querySelector(".hdr"),warnEl=document.getElementById("warnBar");
+ if(hdr)ro.observe(hdr);
+ if(warnEl)ro.observe(warnEl);
+}
+syncSideOffset();
+</script>
+</body>
+</html>
