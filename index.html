@@ -318,6 +318,7 @@ body.slim .side{width:0;flex-basis:0;padding-left:0;padding-right:0;overflow:hid
  </div>
  <div class="olab">Размер круга</div>
  <div class="seg" id="segBatch">
+  <button data-v="10" onclick="opt('batch',10)">10</button>
   <button data-v="15" onclick="opt('batch',15)">15</button>
   <button data-v="20" onclick="opt('batch',20)">20</button>
   <button data-v="25" onclick="opt('batch',25)">25</button>
@@ -503,7 +504,7 @@ const T1=3,T2=10;   // порог узнавания и порог перехо�
 const S={sec:store.get("sec","all"),tab:store.get("view","learn"),
  dir:store.get("dir","two"),ord:store.get("ord","seq"),side:store.get("side","fwd"),
  batch:store.get("batch",20),
- lq:[],lc:null,lshown:false,pq:[],pc:null,pans:false,pforce:false,rq:[],rc:null,rans:false,rforce:false,recent:[]};
+ lq:[],lc:null,lshown:false,pq:[],pc:null,pans:false,pforce:false,rq:[],rc:null,rans:false,rforce:false,recent:[],left:{}};
 if(!NAV.some(x=>x.id===S.sec))S.sec="all";
 
 function items(sec){return sec==="all"?IDX:IDX.filter(r=>r.sec===sec)}
@@ -518,10 +519,16 @@ function cards(sec){
 }
 const GAP=5;
 function markRecent(ck){S.recent.push(ck);if(S.recent.length>4)S.recent.shift()}
-function popNext(q){
+/* Круг — один проход по очереди. Возвращённые карточки встают в хвост и попадают
+   в следующий круг; в начале каждого нового круга «Вперемешку» перемешивает очередь заново. */
+function popNext(key){
+ const q=S[key];
  if(!q.length)return null;
- let i=q.findIndex(c=>S.recent.indexOf(c.ck)<0);
+ let left=Math.min(S.left[key]||0,q.length);
+ if(left<=0){if(S.ord==="rnd")shuf(q);left=q.length}
+ let i=q.findIndex((c,j)=>j<left&&S.recent.indexOf(c.ck)<0);
  if(i<0)i=0;
+ S.left[key]=left-1;
  return q.splice(i,1)[0];
 }
 /* верный ответ — в конец круга, неверный — примерно на треть вперёд,
@@ -549,19 +556,19 @@ function buildLearn(){
  let q=p.recAct.concat(p.newAct);
  if(S.ord==="rnd")q=shuf(p.recAct.slice()).concat(shuf(p.newAct.slice()));
  else q.sort(byW);
- S.lq=q;S.pool=p;
+ S.lq=q;S.pool=p;S.left.lq=q.length;
 }
 function buildPrac(){
  const t=SRS.t();
  let q=cards(S.sec).filter(c=>{const r=SRS.r(c.ck);return r&&SRS.st(c.ck)>=2&&r.d<=t});
  if(S.ord==="rnd")shuf(q);else q.sort(byW);
- S.pq=q;
+ S.pq=q;S.left.pq=q.length;
 }
 /* Повторение: все карточки в практике (st>=2), без фильтра по сроку и без круга */
 function buildReview(){
  let q=cards(S.sec).filter(c=>SRS.st(c.ck)>=2);
  if(S.ord==="rnd")shuf(q);else q.sort(byW);
- S.rq=q;
+ S.rq=q;S.left.rq=q.length;
 }
 
 /* ===== fuzzy match (свободный ввод, без вариантов) ===== */
@@ -873,7 +880,7 @@ function nextLearn(){
    document.getElementById("lActs").innerHTML='<button class="btn" onclick="buildPrac();view(\'practice\')">Перейти к практике</button>';
   card.className="qcard";updLearn();return;
  }
- S.lc=popNext(S.lq);markRecent(S.lc.ck);
+ S.lc=popNext("lq");markRecent(S.lc.ck);
  const c=S.lc,st=SRS.st(c.ck);
  card.className="qcard s"+st;
  const kn=(SRS.r(c.ck)||{k:0}).k||0;
@@ -949,7 +956,7 @@ function nextPrac(){
    return;
   }
  }
- S.pc=popNext(S.pq);markRecent(S.pc.ck);const c=S.pc;
+ S.pc=popNext("pq");markRecent(S.pc.ck);const c=S.pc;
  document.getElementById("pTag").textContent="";
  document.getElementById("pAsk").textContent=c.side==="fwd"?c.ask:c.askRev;
  document.getElementById("pQ").textContent=c.side==="fwd"?c.it.q:c.it.a;
@@ -1049,7 +1056,7 @@ function nextReview(){
    return;
   }
  }
- S.rc=popNext(S.rq);markRecent(S.rc.ck);const c=S.rc;
+ S.rc=popNext("rq");markRecent(S.rc.ck);const c=S.rc;
  document.getElementById("rTag").textContent="";
  document.getElementById("rAsk").textContent=c.side==="fwd"?c.ask:c.askRev;
  document.getElementById("rQ").textContent=c.side==="fwd"?c.it.q:c.it.a;
@@ -1291,7 +1298,7 @@ function applyLinkConfig(cfg){
  if(cfg.dir==="one"||cfg.dir==="two")S.dir=cfg.dir;
  if(cfg.ord==="seq"||cfg.ord==="rnd")S.ord=cfg.ord;
  if(cfg.side==="fwd"||cfg.side==="rev")S.side=cfg.side;
- if([15,20,25].includes(Number(cfg.batch)))S.batch=Number(cfg.batch);
+ if([10,15,20,25].includes(Number(cfg.batch)))S.batch=Number(cfg.batch);
  if(["learn","practice","review","theory","stats"].includes(cfg.view))S.tab=cfg.view;
  if(cfg.theme==="light"||cfg.theme==="dark"){
  document.documentElement.setAttribute("data-theme",cfg.theme);
